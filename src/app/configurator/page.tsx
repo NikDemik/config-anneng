@@ -23,6 +23,7 @@ import {
     InputGroupText,
     InputGroupTextarea,
 } from '@/components/ui/input-group';
+import Step1BaseData from './components/Step1BaseData';
 
 const formSchema = z.object({
     title: z
@@ -64,7 +65,7 @@ export default function BugReportForm() {
     return (
         <Card className="w-full sm:max-w-md">
             <CardHeader>
-                <CardTitle>Bug Report</CardTitle>
+                <CardTitle>Введите данные</CardTitle>
                 <CardDescription>Help us improve by reporting bugs you encounter.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -135,6 +136,7 @@ export default function BugReportForm() {
                     </Button>
                 </Field>
             </CardFooter>
+            <Step1BaseData onNext={(data) => console.log(data)} />
         </Card>
     );
 }
