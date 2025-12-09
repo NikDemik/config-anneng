@@ -24,6 +24,7 @@ import {
     InputGroupTextarea,
 } from '@/components/ui/input-group';
 import Step1BaseData from './components/Step1BaseData';
+import { FieldDemo } from './components/FieldDemo';
 
 const formSchema = z.object({
     title: z
