@@ -1,140 +1,269 @@
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+'use client';
 
-// Схема валидации
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+
+// Схема валидации с обработкой пустых значений
 const formSchema = z.object({
-    // Длина линии
     length: z.coerce
-        .number()
+        .number({
+            invalid_type_error: 'Длина должна быть числом',
+            required_error: 'Поле обязательно',
+        })
         .int('Длина должна быть целым числом')
-        .positive('Длина должна быть положительным числом')
         .min(1, 'Минимальная длина линии - 1 метр')
-        .max(500, 'Максимальная длина линии - 500 метров'),
-    // Количество жил
+        .max(500, 'Максимальная длина линии - 500 метров')
+        .or(z.literal('').transform(() => 0)),
+
     poles: z.coerce
-        .number()
+        .number({
+            invalid_type_error: 'Количество жил должно быть числом',
+            required_error: 'Поле обязательно',
+        })
         .int('Количество жил должно быть целым числом')
-        .positive('Количество жил должно быть положительным числом')
         .min(1, 'Минимальное количество жил - 1')
-        .max(12, 'Максимальное количество жил - 12'),
-    // Напряжение питания
+        .max(12, 'Максимальное количество жил - 12')
+        .or(z.literal('').transform(() => 0)),
+
     voltage: z.coerce
-        .number()
+        .number({
+            invalid_type_error: 'Напряжение должно быть числом',
+            required_error: 'Поле обязательно',
+        })
         .int('Напряжение должно быть целым числом')
-        .positive('Напряжение должно быть положительным числом')
         .min(24, 'Минимальное напряжение - 24В')
-        .max(1000, 'Максимальное напряжение - 1000В'),
-    // Количество кранов
+        .max(1000, 'Максимальное напряжение - 1000В')
+        .or(z.literal('').transform(() => 0)),
+
     cranes: z.coerce
-        .number()
+        .number({
+            invalid_type_error: 'Количество кранов должно быть числом',
+            required_error: 'Поле обязательно',
+        })
         .int('Количество кранов должно быть целым числом')
         .min(0, 'Количество кранов не может быть отрицательным')
-        .max(10, 'Максимальное количество кранов - 10'),
+        .max(10, 'Максимальное количество кранов - 10')
+        .or(z.literal('').transform(() => 0)),
 });
 
-export default function Step1BaseData({ onNext }: { onNext: (data: any) => void }) {
-    const [length, setLength] = useState('');
-    const [poles, setPoles] = useState('');
-    const [voltage, setVoltage] = useState('');
-    const [cranes, setCranes] = useState('');
-
+export default function ConfigurationForm() {
     // Инициализация формы
-    const form = useForm({
+    const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            length: 0,
-            poles: 0,
-            voltage: 0,
-            cranes: 0,
+            length: 30,
+            poles: 4,
+            voltage: 380,
+            cranes: 2,
         },
+        mode: 'onChange',
     });
 
-    const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Функция обработки отправки формы
+    function onSubmit(data: z.infer<typeof formSchema>) {
         console.log('Данные конфигуратора:', data);
-        onNext({ data });
-        // onNext({
-        //     length: Number(length),
-        //     poles: Number(poles),
-        //     voltage: Number(voltage),
-        //     cranes: Number(cranes),
-        // });
 
-        // Здесь также можно отправить данные на сервер
-        // await fetch('/api/configure', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(data),
-        // });
-    };
+        console.table({
+            'Длина линии (м)': data.length,
+            'Количество жил': data.poles,
+            'Напряжение питания (В)': data.voltage,
+            'Количество кранов': data.cranes,
+        });
+
+        console.log(`
+        📋 Конфигурация электрической линии:
+        ──────────────────────────────
+        • Длина линии: ${data.length} м
+        • Количество жил: ${data.poles}
+        • Напряжение питания: ${data.voltage} В
+        • Количество кранов: ${data.cranes}
+        ──────────────────────────────
+        `);
+    }
 
     return (
-        <Card className="p-6 max-w-xl">
+        <Card className="w-full max-w-md">
             <CardHeader>
                 <CardTitle>Введите данные</CardTitle>
-                <CardDescription>Основные параметры линии</CardDescription>
+                <CardDescription>Введите параметры для расчета шинопровода</CardDescription>
             </CardHeader>
-
-            <CardContent className="space-y-6">
-                <form id="form-base-data" onSubmit={form.handleSubmit(onSubmit)}>
-                    {/* Длина линии */}
-                    <div className="space-y-2">
-                        <Label>Длина линии (м)</Label>
-                        <Input
-                            type="number"
-                            min={1}
-                            value={length}
-                            onChange={(e) => setLength(e.target.value)}
-                            placeholder="Например: 30"
+            <CardContent>
+                <form id="form-configuration" onSubmit={form.handleSubmit(onSubmit)}>
+                    <FieldGroup>
+                        {/* Длина линии */}
+                        <Controller
+                            name="length"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-configuration-length">
+                                        Длина линии (м)
+                                    </FieldLabel>
+                                    <Input
+                                        {...field}
+                                        id="form-configuration-length"
+                                        type="number"
+                                        placeholder="Например: 30"
+                                        min={1}
+                                        value={field.value === 0 ? '' : field.value}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? 0 : Number(value));
+                                        }}
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    <FieldDescription>
+                                        Укажите длину линии от 1 до 500 метров
+                                    </FieldDescription>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
                         />
-                    </div>
 
-                    {/* Количество жил */}
-                    <div className="space-y-2">
-                        <Label>Количество жил</Label>
-                        <Input
-                            type="number"
-                            min={1}
-                            value={poles}
-                            onChange={(e) => setPoles(e.target.value)}
-                            placeholder="Например: 4"
+                        {/* Количество жил */}
+                        <Controller
+                            name="poles"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-configuration-poles">
+                                        Количество жил
+                                    </FieldLabel>
+                                    <Input
+                                        {...field}
+                                        id="form-configuration-poles"
+                                        type="number"
+                                        placeholder="Например: 4"
+                                        min={1}
+                                        value={field.value === 0 ? '' : field.value}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? 0 : Number(value));
+                                        }}
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    <FieldDescription>Количество жил от 1 до 12</FieldDescription>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
                         />
-                    </div>
 
-                    {/* Напряжение питания */}
-                    <div className="space-y-2">
-                        <Label>Напряжение питания (В)</Label>
-                        <Input
-                            type="number"
-                            value={voltage}
-                            onChange={(e) => setVoltage(e.target.value)}
-                            placeholder="Например: 380"
+                        {/* Напряжение питания */}
+                        <Controller
+                            name="voltage"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-configuration-voltage">
+                                        Напряжение питания (В)
+                                    </FieldLabel>
+                                    <Input
+                                        {...field}
+                                        id="form-configuration-voltage"
+                                        type="number"
+                                        placeholder="Например: 380"
+                                        value={field.value === 0 ? '' : field.value}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? 0 : Number(value));
+                                        }}
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    <FieldDescription>Напряжение от 24 до 1000 В</FieldDescription>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
                         />
-                    </div>
 
-                    {/* Количество кранов */}
-                    <div className="space-y-2">
-                        <Label>Количество кранов</Label>
-                        <Input
-                            type="number"
-                            min={0}
-                            value={cranes}
-                            onChange={(e) => setCranes(e.target.value)}
-                            placeholder="Например: 2"
+                        {/* Количество кранов */}
+                        <Controller
+                            name="cranes"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-configuration-cranes">
+                                        Количество кранов
+                                    </FieldLabel>
+                                    <Input
+                                        {...field}
+                                        id="form-configuration-cranes"
+                                        type="number"
+                                        placeholder="Например: 2"
+                                        min={0}
+                                        value={field.value === 0 ? '' : field.value}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? 0 : Number(value));
+                                        }}
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    <FieldDescription>
+                                        Количество кранов от 0 до 10
+                                    </FieldDescription>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
                         />
-                    </div>
-
-                    <Button type="submit" form="form-base-data" className="w-full mt-2">
-                        Далее
-                    </Button>
+                    </FieldGroup>
                 </form>
             </CardContent>
+            <CardFooter className="flex flex-col flex-wrap sm:flex-row gap-2">
+                <div className="flex gap-2 w-full">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                            const values = form.getValues();
+                            console.log('Текущие значения формы:', values);
+                            alert(`Проверка значений:\n
+                                Длина: ${values.length || 0} м\n
+                                Жилы: ${values.poles || 0}\n
+                                Напряжение: ${values.voltage || 0} В\n
+                                Краны: ${values.cranes || 0}
+                            `);
+                        }}
+                    >
+                        Показать значения
+                    </Button>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                            form.reset();
+                            console.log('Форма сброшена к значениям по умолчанию');
+                        }}
+                    >
+                        Сбросить
+                    </Button>
+                </div>
+
+                <Button type="submit" form="form-configuration" className="w-full sm:w-auto">
+                    Сохранить конфигурацию
+                </Button>
+            </CardFooter>
         </Card>
     );
 }
