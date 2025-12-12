@@ -23,8 +23,8 @@ const formSchema = z.object({
             required_error: 'Поле обязательно',
         })
         .int('Длина должна быть целым числом')
-        .min(1, 'Минимальная длина линии - 1 метр')
-        .max(500, 'Максимальная длина линии - 500 метров')
+        .min(4, 'Минимальная длина линии - 4 метр')
+        .max(1048, 'Максимальная длина линии - 1048 метров')
         .or(z.literal('').transform(() => 0)),
 
     poles: z.coerce
@@ -49,12 +49,21 @@ const formSchema = z.object({
 
     cranes: z.coerce
         .number({
-            invalid_type_error: 'Количество кранов должно быть числом',
+            invalid_type_error: 'Количество потребителей должно быть числом',
             required_error: 'Поле обязательно',
         })
-        .int('Количество кранов должно быть целым числом')
-        .min(0, 'Количество кранов не может быть отрицательным')
-        .max(10, 'Максимальное количество кранов - 10')
+        .int('Количество потребителей должно быть целым числом')
+        .min(1, 'Минимальное количество потребителей 1')
+        .max(12, 'Максимальное количество потребителей - 12')
+        .or(z.literal('').transform(() => 0)),
+
+    power: z.coerce
+        .number({
+            invalid_type_error: 'Мощность потребителей должно быть числом',
+            required_error: 'Поле обязательно',
+        })
+        .min(0, 'Мощность потребителей не может быть отрицательным')
+        .max(100, 'Максимальное количество потребителей - 100')
         .or(z.literal('').transform(() => 0)),
 });
 
@@ -63,10 +72,11 @@ export default function ConfigurationForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            length: 30,
+            length: 104,
             poles: 4,
             voltage: 380,
             cranes: 2,
+            power: 10,
         },
         mode: 'onChange',
     });
@@ -79,7 +89,8 @@ export default function ConfigurationForm() {
             'Длина линии (м)': data.length,
             'Количество жил': data.poles,
             'Напряжение питания (В)': data.voltage,
-            'Количество кранов': data.cranes,
+            'Количество потребителей': data.cranes,
+            'Мощность потребителей': data.power,
         });
 
         console.log(`
@@ -88,7 +99,8 @@ export default function ConfigurationForm() {
         • Длина линии: ${data.length} м
         • Количество жил: ${data.poles}
         • Напряжение питания: ${data.voltage} В
-        • Количество кранов: ${data.cranes}
+        • Количество потребителей: ${data.cranes}
+        • Мощность потребителей: ${data.power}
         ──────────────────────────────
         `);
     }
@@ -115,7 +127,7 @@ export default function ConfigurationForm() {
                                         {...field}
                                         id="form-configuration-length"
                                         type="number"
-                                        placeholder="Например: 30"
+                                        placeholder="Например: 104"
                                         min={1}
                                         value={field.value === 0 ? '' : field.value}
                                         onChange={(e) => {
@@ -125,7 +137,7 @@ export default function ConfigurationForm() {
                                         aria-invalid={fieldState.invalid}
                                     />
                                     <FieldDescription>
-                                        Укажите длину линии от 1 до 500 метров
+                                        Укажите длину линии от 4 до 1048 метров, кратно 4
                                     </FieldDescription>
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -193,14 +205,14 @@ export default function ConfigurationForm() {
                             )}
                         />
 
-                        {/* Количество кранов */}
+                        {/* Количество потребителей */}
                         <Controller
                             name="cranes"
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel htmlFor="form-configuration-cranes">
-                                        Количество кранов
+                                        Количество потребителей
                                     </FieldLabel>
                                     <Input
                                         {...field}
@@ -216,7 +228,40 @@ export default function ConfigurationForm() {
                                         aria-invalid={fieldState.invalid}
                                     />
                                     <FieldDescription>
-                                        Количество кранов от 0 до 10
+                                        Количество потребителей от 1 до 10 (кранов, или др.
+                                        оборудование)
+                                    </FieldDescription>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
+                        />
+
+                        {/* Мощность потребителей */}
+                        <Controller
+                            name="power"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-configuration-power">
+                                        Мощность всех потребителей (кВт)
+                                    </FieldLabel>
+                                    <Input
+                                        {...field}
+                                        id="form-configuration-power"
+                                        type="number"
+                                        placeholder="Например: 10"
+                                        min={0}
+                                        value={field.value === 0 ? '' : field.value}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? 0 : Number(value));
+                                        }}
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    <FieldDescription>
+                                        Укажите общую мощность всех потребителей
                                     </FieldDescription>
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -240,7 +285,8 @@ export default function ConfigurationForm() {
                                 Длина: ${values.length || 0} м\n
                                 Жилы: ${values.poles || 0}\n
                                 Напряжение: ${values.voltage || 0} В\n
-                                Краны: ${values.cranes || 0}
+                                Краны: ${values.cranes || 0} \n
+                                Мощность: ${values.power || 0} кВт
                             `);
                         }}
                     >
