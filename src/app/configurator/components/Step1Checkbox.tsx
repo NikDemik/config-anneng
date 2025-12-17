@@ -15,9 +15,16 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useEffect } from 'react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 // Схема валидации для потребителей
 const consumerSchema = z.object({
@@ -31,7 +38,13 @@ const consumerSchema = z.object({
         .or(z.literal('').transform(() => 0)),
 });
 
-// Основная схема валидации с кастомной проверкой суммы мощностей
+// Типы питания
+const POWER_TYPES = {
+    END: 'end',
+    LINEAR: 'linear',
+} as const;
+
+// Основная схема валидации с кастомной проверкой
 const formSchema = z
     .object({
         length: z.coerce
@@ -63,6 +76,11 @@ const formSchema = z
             .min(24, 'Минимальное напряжение - 24В')
             .max(1000, 'Максимальное напряжение - 1000В')
             .or(z.literal('').transform(() => 0)),
+
+        // Тип питания
+        powerType: z.enum([POWER_TYPES.END, POWER_TYPES.LINEAR], {
+            required_error: 'Выберите тип питания',
+        }),
 
         // Поле для общего количества потребителей
         totalConsumers: z.coerce
@@ -106,11 +124,24 @@ const formSchema = z
                 // Допускаем небольшую погрешность в 0.1 кВт из-за округлений
                 return Math.abs(sumIndividualPowers - data.totalPower) <= 0.1;
             }
-            return true; // Если индивидуальные мощности не указаны, проверка не нужна
+            return true;
         },
         {
             message: 'Сумма мощностей потребителей не совпадает с общей мощностью',
-            path: ['totalPower'], // Указываем ошибку на поле общей мощности
+            path: ['totalPower'],
+        },
+    )
+    .refine(
+        (data) => {
+            // Проверка: если длина линии более 150 метров, только линейное питание
+            if (data.length > 150) {
+                return data.powerType === POWER_TYPES.LINEAR;
+            }
+            return true;
+        },
+        {
+            message: 'При длине линии более 150 метров доступно только линейное питание',
+            path: ['powerType'],
         },
     );
 
@@ -122,6 +153,7 @@ export default function ConfigurationForm() {
             length: 30,
             poles: 4,
             voltage: 380,
+            powerType: POWER_TYPES.END,
             totalConsumers: 1,
             totalPower: 0,
             showIndividualPowers: false,
@@ -131,14 +163,20 @@ export default function ConfigurationForm() {
     });
 
     // Получаем значения формы для отслеживания
+    const watchLength = form.watch('length');
     const watchTotalConsumers = form.watch('totalConsumers');
     const watchShowIndividualPowers = form.watch('showIndividualPowers');
     const watchTotalPower = form.watch('totalPower');
     const watchIndividualPowers = form.watch('individualPowers');
+    const watchPowerType = form.watch('powerType');
 
     // Вычисляем сумму индивидуальных мощностей
     const sumIndividualPowers =
         watchIndividualPowers?.reduce((sum, consumer) => sum + (consumer.power || 0), 0) || 0;
+
+    // Проверяем, нужно ли ограничивать выбор типа питания
+    const isLengthOver150 = watchLength > 150;
+    const isPowerTypeForced = isLengthOver150 && watchPowerType !== POWER_TYPES.LINEAR;
 
     // Инициализация fieldArray для динамических полей потребителей
     const { fields, append, remove } = useFieldArray({
@@ -154,8 +192,9 @@ export default function ConfigurationForm() {
             'Длина линии (м)': data.length,
             'Количество жил': data.poles,
             'Напряжение питания (В)': data.voltage,
+            'Тип питания': data.powerType === POWER_TYPES.END ? 'Концевое' : 'Линейное',
             'Количество потребителей': data.totalConsumers,
-            'Общая мощность (кВт)': data.totalPower,
+            'Общая мощность': data.totalPower + ' кВт',
         });
 
         if (data.showIndividualPowers && data.individualPowers) {
@@ -172,6 +211,7 @@ export default function ConfigurationForm() {
         • Длина линии: ${data.length} м
         • Количество жил: ${data.poles}
         • Напряжение питания: ${data.voltage} В
+        • Тип питания: ${data.powerType === POWER_TYPES.END ? 'Концевое' : 'Линейное'}
         • Количество потребителей: ${data.totalConsumers}
         • Общая мощность: ${data.totalPower} кВт
         ${data.showIndividualPowers ? '• Используются индивидуальные мощности' : ''}
@@ -180,38 +220,51 @@ export default function ConfigurationForm() {
                 ? `• Сумма индивидуальных мощностей: ${sumIndividualPowers} кВт`
                 : ''
         }
+        ${
+            isLengthOver150
+                ? '• Примечание: применено линейное питание из-за длины линии > 150м'
+                : ''
+        }
         ──────────────────────────────
         `);
     }
 
-    // Функция для обновления массива потребителей при изменении количества
+    // Функция для обновления массива потребителей
     const updateConsumersArray = (count: number) => {
         const currentCount = fields.length;
 
         if (count > currentCount) {
-            // Добавляем новые поля с расчетом мощности по умолчанию
             const powerPerConsumer = watchTotalPower / count;
             for (let i = currentCount; i < count; i++) {
                 append({ power: powerPerConsumer || 0 });
             }
         } else if (count < currentCount) {
-            // Удаляем лишние поля
             for (let i = currentCount - 1; i >= count; i--) {
                 remove(i);
             }
         }
 
-        // Если есть индивидуальные мощности, перераспределяем общую мощность
         if (watchShowIndividualPowers && count > 0) {
-            const remainingPower = watchTotalPower;
-            const newPowerPerConsumer = remainingPower / count;
-
-            // Обновляем существующие поля
+            const newPowerPerConsumer = watchTotalPower / count;
             fields.forEach((_, index) => {
                 if (index < count) {
                     form.setValue(`individualPowers.${index}.power`, newPowerPerConsumer || 0);
                 }
             });
+        }
+    };
+
+    // Обработчик изменения длины линии
+    const handleLengthChange = (value: string | number) => {
+        const numValue = value === '' ? 0 : Number(value);
+
+        if (numValue < 1) return;
+
+        form.setValue('length', numValue);
+
+        // Если длина превышает 150 метров, принудительно устанавливаем линейное питание
+        if (numValue > 150 && watchPowerType !== POWER_TYPES.LINEAR) {
+            form.setValue('powerType', POWER_TYPES.LINEAR);
         }
     };
 
@@ -223,7 +276,6 @@ export default function ConfigurationForm() {
 
         form.setValue('totalConsumers', numValue);
 
-        // Если включен режим индивидуальных мощностей
         if (watchShowIndividualPowers) {
             updateConsumersArray(numValue);
         }
@@ -231,7 +283,6 @@ export default function ConfigurationForm() {
 
     // Обработчик изменения общей мощности
     const handleTotalPowerChange = (value: number) => {
-        // Если включен режим индивидуальных мощностей, перераспределяем мощность
         if (watchShowIndividualPowers && watchTotalConsumers > 0) {
             const powerPerConsumer = value / watchTotalConsumers;
 
@@ -241,12 +292,19 @@ export default function ConfigurationForm() {
         }
     };
 
-    // Эффект для автоматического перераспределения мощности при изменении общего количества
+    // Эффект для автоматического перераспределения мощности
     useEffect(() => {
         if (watchShowIndividualPowers && watchTotalPower > 0) {
             handleTotalPowerChange(watchTotalPower);
         }
     }, [watchTotalConsumers, watchShowIndividualPowers]);
+
+    // Эффект для проверки типа питания при изменении длины
+    useEffect(() => {
+        if (isLengthOver150 && watchPowerType !== POWER_TYPES.LINEAR) {
+            form.setValue('powerType', POWER_TYPES.LINEAR);
+        }
+    }, [watchLength]);
 
     return (
         <Card className="w-full max-w-md">
@@ -277,12 +335,17 @@ export default function ConfigurationForm() {
                                         value={field.value === 0 ? '' : field.value}
                                         onChange={(e) => {
                                             const value = e.target.value;
-                                            field.onChange(value === '' ? 0 : Number(value));
+                                            handleLengthChange(value);
                                         }}
                                         aria-invalid={fieldState.invalid}
                                     />
                                     <FieldDescription>
                                         Укажите длину линии от 1 до 500 метров
+                                        {/* {isLengthOver150 && (
+                                            <span className="text-amber-600 ml-1">
+                                                (линейное питание обязательно)
+                                            </span>
+                                        )} */}
                                     </FieldDescription>
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
@@ -343,6 +406,64 @@ export default function ConfigurationForm() {
                                         aria-invalid={fieldState.invalid}
                                     />
                                     <FieldDescription>Напряжение от 24 до 1000 В</FieldDescription>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+                            )}
+                        />
+
+                        {/* Тип питания */}
+                        <Controller
+                            name="powerType"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-configuration-power-type">
+                                        Тип питания
+                                    </FieldLabel>
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={(value) => {
+                                            // Не позволяем изменить тип питания, если длина > 150м
+                                            if (isLengthOver150 && value !== POWER_TYPES.LINEAR) {
+                                                return;
+                                            }
+                                            field.onChange(value);
+                                        }}
+                                        disabled={isLengthOver150}
+                                    >
+                                        <SelectTrigger
+                                            id="form-configuration-power-type"
+                                            className={fieldState.invalid ? 'border-red-500' : ''}
+                                        >
+                                            <SelectValue placeholder="Выберите тип питания" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={POWER_TYPES.END}>
+                                                Концевое питание
+                                            </SelectItem>
+                                            <SelectItem value={POWER_TYPES.LINEAR}>
+                                                Линейное питание
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldDescription>
+                                        {isLengthOver150 ? (
+                                            <div className="flex items-center text-amber-600">
+                                                <Info className="h-4 w-4 mr-1" />
+                                                При длине линии более 150 м доступно только линейное
+                                                питание
+                                            </div>
+                                        ) : (
+                                            <>
+                                                Концевое питание - питание с одного конца линии
+                                                <br />
+                                                Линейное питание - питание в любом месте соедеинения
+                                                секций
+                                            </>
+                                        )}
+                                    </FieldDescription>
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
                                     )}
@@ -418,7 +539,7 @@ export default function ConfigurationForm() {
                             )}
                         />
 
-                        {/* Checkbox для индивидуальных мощностей (показываем только если потребителей > 1) */}
+                        {/* Checkbox для индивидуальных мощностей */}
                         {watchTotalConsumers > 1 && (
                             <Controller
                                 name="showIndividualPowers"
@@ -432,10 +553,8 @@ export default function ConfigurationForm() {
                                                 field.onChange(checked);
 
                                                 if (checked) {
-                                                    // Включаем режим индивидуальных мощностей
                                                     updateConsumersArray(watchTotalConsumers);
                                                 } else {
-                                                    // Выключаем режим, очищаем массив
                                                     while (fields.length > 0) {
                                                         remove(fields.length - 1);
                                                     }
@@ -501,7 +620,7 @@ export default function ConfigurationForm() {
                             </Alert>
                         )}
 
-                        {/* Поля для индивидуальных мощностей потребителей (только если потребителей > 1 и checkbox активен) */}
+                        {/* Поля для индивидуальных мощностей потребителей */}
                         {watchTotalConsumers > 1 && watchShowIndividualPowers && (
                             <div className="space-y-4 pt-4 border-t">
                                 <FieldLabel>Мощности потребителей (кВт)</FieldLabel>
@@ -558,7 +677,6 @@ export default function ConfigurationForm() {
                                                                 size="icon"
                                                                 onClick={() => {
                                                                     remove(index);
-                                                                    // Обновляем общее количество потребителей
                                                                     form.setValue(
                                                                         'totalConsumers',
                                                                         watchTotalConsumers - 1,
@@ -584,11 +702,9 @@ export default function ConfigurationForm() {
                                             const newCount = watchTotalConsumers + 1;
                                             form.setValue('totalConsumers', newCount);
 
-                                            // Добавляем нового потребителя с расчетной мощностью
                                             const powerPerConsumer = watchTotalPower / newCount;
                                             append({ power: powerPerConsumer || 0 });
 
-                                            // Перераспределяем мощность между всеми потребителями
                                             fields.forEach((_, index) => {
                                                 form.setValue(
                                                     `individualPowers.${index}.power`,
@@ -621,8 +737,16 @@ export default function ConfigurationForm() {
                                 Длина: ${values.length || 0} м\n
                                 Жилы: ${values.poles || 0}\n
                                 Напряжение: ${values.voltage || 0} В\n
+                                Тип питания: ${
+                                    values.powerType === POWER_TYPES.END ? 'Концевое' : 'Линейное'
+                                }\n
                                 Потребители: ${values.totalConsumers || 1}\n
                                 Общая мощность: ${values.totalPower || 0} кВт`;
+
+                            // if (isLengthOver150) {
+                            //     message +=
+                            //         '\n\n⚠️  Применено линейное питание (длина линии > 150 м)';
+                            // }
 
                             if (values.showIndividualPowers && values.individualPowers) {
                                 message += '\n\nИндивидуальные мощности:';
@@ -649,6 +773,7 @@ export default function ConfigurationForm() {
                                 length: 30,
                                 poles: 4,
                                 voltage: 380,
+                                powerType: POWER_TYPES.END,
                                 totalConsumers: 1,
                                 totalPower: 0,
                                 showIndividualPowers: false,
