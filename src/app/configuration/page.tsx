@@ -1,10 +1,13 @@
-import ConfigurationLayout from '@/components/configuration/ConfigurationLayout';
-import Step1 from './steps/Step1';
+// src/app/configuration/page.tsx
+'use client';
+
+import { ConfigurationProvider } from './context/ConfigurationContext';
+import ConfigurationLayout from './layout';
 
 export default function ConfigurationPage() {
     return (
-        <ConfigurationLayout>
-            <Step1 />
-        </ConfigurationLayout>
+        <ConfigurationProvider>
+            <ConfigurationLayout />
+        </ConfigurationProvider>
     );
 }

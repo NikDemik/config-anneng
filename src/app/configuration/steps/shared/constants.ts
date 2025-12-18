@@ -1,6 +1,6 @@
 export const POWER_TYPES = {
-    END: 'end',
-    LINEAR: 'linear',
+    END: 'end' as const,
+    LINEAR: 'linear' as const,
 } as const;
 
 export const VALIDATION_MESSAGES = {
