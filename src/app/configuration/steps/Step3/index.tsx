@@ -1,8 +1,9 @@
 // src/app/configuration/steps/Step3/index.tsx
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldGroup } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,8 +11,8 @@ import { AlertCircle } from 'lucide-react';
 import { step3Schema } from '../shared/schema';
 import { ConfigurationData } from '../shared/types';
 import { useConfiguration } from '../../context/ConfigurationContext';
-import TotalPowerField from './fields/TotalPowerField';
 import { useConsumersLogic } from './hooks/useConsumersLogic';
+import TotalPowerField from './fields/TotalPowerField';
 import ConsumersFields from './fields/ConsumersFields';
 
 export default function Step3() {
@@ -77,6 +78,27 @@ export default function Step3() {
     });
 
     const canSubmit = form.formState.isValid && !hasPowerMismatch;
+
+    // синхронизация массива
+    useEffect(() => {
+        if (!watchShowIndividualPowers) return;
+
+        const currentLength = fields.length;
+
+        if (watchTotalConsumers > currentLength) {
+            // добавляем недостающих
+            for (let i = currentLength; i < watchTotalConsumers; i++) {
+                append({ power: 0 });
+            }
+        }
+
+        if (watchTotalConsumers < currentLength) {
+            // удаляем лишних
+            for (let i = currentLength - 1; i >= watchTotalConsumers; i--) {
+                remove(i);
+            }
+        }
+    }, [watchShowIndividualPowers, watchTotalConsumers, fields.length, append, remove]);
 
     return (
         <div className="space-y-6">

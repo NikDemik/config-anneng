@@ -1,18 +1,20 @@
 // src/app/configuration/steps/Step2/index.tsx
 'use client';
 
+import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { FieldGroup } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { step2Schema } from '../shared/schema';
 import { ConfigurationData } from '../shared/types';
+import { POWER_TYPES, MAX_LENGTH_FOR_END_POWER } from '../shared/constants';
 import { useConfiguration } from '../../context/ConfigurationContext';
 import VoltageField from './fields/VoltageField';
 import PowerTypeField from './fields/PowerTypeField';
 
 export default function Step2() {
-    const { data, updateData, goToPrevStep } = useConfiguration();
+    const { data, updateData, goToPrevStep, goToNextStep } = useConfiguration();
 
     const form = useForm<ConfigurationData>({
         resolver: zodResolver(step2Schema),
@@ -24,8 +26,7 @@ export default function Step2() {
     });
 
     // Получаем длину линии из контекста для проверки ограничений
-    const { data: contextData } = useConfiguration();
-    const length = contextData.length;
+    const length = data.length;
 
     const onSubmit = form.handleSubmit((formData) => {
         updateData(formData);
@@ -33,6 +34,21 @@ export default function Step2() {
     });
 
     const canProceed = form.formState.isValid;
+
+    useEffect(() => {
+        const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
+
+        if (isForcedLinear) {
+            // 1. Обновляем форму
+            form.setValue('powerType', POWER_TYPES.LINEAR, {
+                shouldValidate: true,
+                shouldDirty: true,
+            });
+
+            // 2. Обновляем глобальный контекст
+            updateData({ powerType: POWER_TYPES.LINEAR });
+        }
+    }, [length, form, updateData]);
 
     return (
         <form onSubmit={onSubmit} className="space-y-6">
@@ -62,6 +78,7 @@ export default function Step2() {
                         // Сохраняем данные перед переходом
                         form.handleSubmit((formData) => {
                             updateData(formData);
+                            goToNextStep();
                         })();
                     }}
                     className="bg-blue-600 hover:bg-blue-700"

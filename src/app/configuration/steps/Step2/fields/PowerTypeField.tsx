@@ -21,8 +21,9 @@ interface PowerTypeFieldProps {
 }
 
 export default function PowerTypeField({ control, length }: PowerTypeFieldProps) {
-    const isLengthOver150 = length > MAX_LENGTH_FOR_END_POWER;
-    const isForcedLinear = isLengthOver150;
+    const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
+    // const isLengthOver150 = length > MAX_LENGTH_FOR_END_POWER;
+    // const isForcedLinear = isLengthOver150;
 
     return (
         <div className="space-y-4">

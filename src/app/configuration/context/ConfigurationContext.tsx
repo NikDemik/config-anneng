@@ -15,6 +15,7 @@ interface ConfigurationContextType {
 
 const ConfigurationContext = createContext<ConfigurationContextType | undefined>(undefined);
 
+// Начальные данные конфигуратора
 const initialData: ConfigurationData = {
     length: 30,
     poles: 4,
@@ -34,24 +35,28 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
         setData((prev) => ({ ...prev, ...updates }));
     };
 
+    // Управление шагами
     const goToStep = (step: number) => {
         if (step >= 1 && step <= 3) {
             setCurrentStep(step);
         }
     };
 
+    // Следующий шаг
     const goToNextStep = () => {
         if (currentStep < 3) {
             setCurrentStep((prev) => prev + 1);
         }
     };
 
+    // Предыдущий шаг
     const goToPrevStep = () => {
         if (currentStep > 1) {
             setCurrentStep((prev) => prev - 1);
         }
     };
 
+    // Сброс конфигуратора
     const resetData = () => {
         setData(initialData);
         setCurrentStep(1);
