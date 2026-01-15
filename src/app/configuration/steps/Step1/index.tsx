@@ -14,7 +14,7 @@ export default function Step1() {
     const { data, updateData, goToNextStep } = useConfiguration();
 
     const form = useForm<ConfigurationData>({
-        resolver: zodResolver(step1Schema),
+        resolver: zodResolver(step1Schema as any),
         defaultValues: {
             length: data.length,
             poles: data.poles,

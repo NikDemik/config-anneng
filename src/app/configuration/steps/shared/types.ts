@@ -1,5 +1,10 @@
 export type PowerType = 'end' | 'linear';
 
+export type Step1Data = {
+    length: number;
+    poles: number;
+};
+
 export interface Consumer {
     power: number;
 }
