@@ -17,7 +17,7 @@ export default function Step2() {
     const { data, updateData, goToPrevStep, goToNextStep } = useConfiguration();
 
     const form = useForm<ConfigurationData>({
-        resolver: zodResolver(step2Schema),
+        resolver: zodResolver(step2Schema as any),
         defaultValues: {
             voltage: data.voltage,
             powerType: data.powerType,
@@ -78,6 +78,7 @@ export default function Step2() {
                         // Сохраняем данные перед переходом
                         form.handleSubmit((formData) => {
                             updateData(formData);
+                            console.log(formData); //вывод данных в консоль
                             goToNextStep();
                         })();
                     }}

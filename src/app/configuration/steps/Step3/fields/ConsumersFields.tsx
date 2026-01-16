@@ -41,7 +41,7 @@ export default function ConsumersFields({
     const powerMismatch = Math.abs(sumIndividualPowers - totalPower) > 0.1;
 
     // Если передано totalConsumers, не показываем поле для его ввода
-    const showConsumersInput = totalConsumers === undefined;
+    const showConsumersInput = totalConsumers >= 1;
 
     return (
         <div className="space-y-6">

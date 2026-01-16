@@ -22,7 +22,7 @@ const initialData: ConfigurationData = {
     voltage: 380,
     powerType: 'end',
     totalConsumers: 1,
-    totalPower: 0,
+    totalPower: 10,
     showIndividualPowers: false,
     individualPowers: [],
 };

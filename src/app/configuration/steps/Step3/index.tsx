@@ -19,7 +19,7 @@ export default function Step3() {
     const { data, updateData, goToPrevStep } = useConfiguration();
 
     const form = useForm<ConfigurationData>({
-        resolver: zodResolver(step3Schema),
+        resolver: zodResolver(step3Schema as any),
         defaultValues: {
             totalConsumers: data.totalConsumers,
             totalPower: data.totalPower,
@@ -74,10 +74,12 @@ export default function Step3() {
         }
 
         updateData(formData);
+        console.log(data);
         alert('Конфигурация успешно сохранена!');
+        console.log('Конфигурация успешно сохранена!');
     });
 
-    const canSubmit = form.formState.isValid && !hasPowerMismatch;
+    const canSubmit = form.formState.isValid;
 
     // синхронизация массива
     useEffect(() => {
