@@ -16,7 +16,7 @@ import TotalPowerField from './fields/TotalPowerField';
 import ConsumersFields from './fields/ConsumersFields';
 
 export default function Step3() {
-    const { data, updateData, goToPrevStep } = useConfiguration();
+    const { data, updateData, goToPrevStep, goToNextStep } = useConfiguration();
 
     const form = useForm<ConfigurationData>({
         resolver: zodResolver(step3Schema as any),
@@ -74,8 +74,9 @@ export default function Step3() {
         }
 
         updateData(formData);
+        goToNextStep();
         console.log(data);
-        alert('Конфигурация успешно сохранена!');
+        // alert('Конфигурация успешно сохранена!');
         console.log('Конфигурация успешно сохранена!');
     });
 
@@ -167,7 +168,7 @@ export default function Step3() {
                         className="bg-green-600 hover:bg-green-700"
                         disabled={!canSubmit}
                     >
-                        Завершить конфигурацию
+                        Далее
                         {!canSubmit && ' (есть ошибки)'}
                     </Button>
                 </div>

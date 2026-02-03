@@ -37,14 +37,14 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
 
     // Управление шагами
     const goToStep = (step: number) => {
-        if (step >= 1 && step <= 3) {
+        if (step >= 1 && step <= 4) {
             setCurrentStep(step);
         }
     };
 
     // Следующий шаг
     const goToNextStep = () => {
-        if (currentStep < 3) {
+        if (currentStep < 4) {
             setCurrentStep((prev) => prev + 1);
         }
     };

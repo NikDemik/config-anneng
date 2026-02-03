@@ -24,7 +24,7 @@ export const configurationSchema = z
             })
             .int('Длина должна быть целым числом')
             .min(1, VALIDATION_MESSAGES.LENGTH_MIN)
-            .max(500, VALIDATION_MESSAGES.LENGTH_MAX)
+            .max(1000, VALIDATION_MESSAGES.LENGTH_MAX)
             .or(z.literal('').transform(() => 0)),
 
         poles: z.coerce
@@ -59,7 +59,7 @@ export const configurationSchema = z
             })
             .int('Количество потребителей должно быть целым числом')
             .min(1, VALIDATION_MESSAGES.CONSUMERS_MIN)
-            .max(20, VALIDATION_MESSAGES.CONSUMERS_MAX)
+            .max(12, VALIDATION_MESSAGES.CONSUMERS_MAX)
             .or(z.literal('').transform(() => 1)),
 
         totalPower: z.coerce
