@@ -5,6 +5,7 @@ import { useConfiguration } from './context/ConfigurationContext';
 import Step1 from './steps/Step1';
 import Step2 from './steps/Step2';
 import Step3 from './steps/Step3';
+import Step4 from './steps/CheckData';
 import CheckData from './steps/CheckData';
 
 export default function ConfigurationSteps() {
@@ -18,7 +19,7 @@ export default function ConfigurationSteps() {
         case 3:
             return <Step3 />;
         case 4:
-            return <CheckData />;
+            return <Step4 />;
         default:
             return null;
     }

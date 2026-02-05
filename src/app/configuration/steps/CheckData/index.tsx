@@ -9,8 +9,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, AlertCircle, Download, Printer, Share2, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { calculateTotalCurrent } from '@/app/configuration/utils/calculations';
 
-export default function CheckData() {
+export default function Step4() {
     const { data, resetData, goToStep } = useConfiguration();
     const [isConfirmed, setIsConfirmed] = useState(false);
 
@@ -51,7 +52,8 @@ export default function CheckData() {
     // Расчетные параметры
     const calculateParameters = () => {
         // Пример расчетов - можно расширить
-        const totalCurrent = (data.totalPower * 1000) / (data.voltage * 1.73 * 0.8 * 0.9); // Для трехфазной
+        const totalCurrent = calculateTotalCurrent(data); // Для трехфазной
+        // const totalCurrent = (data.totalPower * 1000) / (data.voltage * 1.73 * 0.8 * 0.9);
         const recommendedCableSection = Math.max(1.5, totalCurrent / 6); // Упрощенный расчет
 
         return {
