@@ -18,6 +18,7 @@ const CONSUMER_FACTORS: Record<number, number> = {
     // Для большего количества можно продолжить или использовать минимальный
 };
 
+// Расчет максимального тока
 export function calculateTotalCurrent(data: ConfigurationData): number {
     // Базовая формула для одного потребителя
     const baseCurrent = (data.totalPower * 1000) / (data.voltage * 1.73 * 0.8 * 0.9);
@@ -27,7 +28,7 @@ export function calculateTotalCurrent(data: ConfigurationData): number {
     const factor = CONSUMER_FACTORS[consumerCount] || 1; // По умолчанию минимальный коэффициент
 
     // Применяем коэффициент
-    const adjustedCurrent = baseCurrent * factor;
+    const adjustedCurrent = Math.ceil(baseCurrent * factor);  // Округляем до целого значения
 
     return adjustedCurrent;
 }
