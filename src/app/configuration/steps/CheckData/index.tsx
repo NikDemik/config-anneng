@@ -1,19 +1,43 @@
 // src/app/configuration/steps/Step4/index.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConfiguration } from '../../context/ConfigurationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, AlertCircle, Download, Printer, Share2, Copy } from 'lucide-react';
+import {
+    CheckCircle,
+    AlertCircle,
+    Download,
+    Printer,
+    Share2,
+    Copy,
+    Save,
+    Database,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { calculateTotalCurrent } from '@/app/configuration/utils/calculations';
+import {
+    calculateTotalCurrent,
+    performCompleteCalculations,
+} from '@/app/configuration/utils/calculations';
 
 export default function Step4() {
-    const { data, resetData, goToStep } = useConfiguration();
+    const { data, updateCalculations, saveCompleteConfiguration, resetData, goToStep } =
+        useConfiguration();
     const [isConfirmed, setIsConfirmed] = useState(false);
+    const [calculations, setCalculations] = useState<any>(null);
+
+    // Автоматический расчет при загрузке или изменении данных
+    useEffect(() => {
+        if (data.totalPower > 0 && data.voltage > 0) {
+            const calc = performCompleteCalculations(data);
+            setCalculations(calc);
+            // Сохраняем расчеты в контекст
+            updateCalculations(calc);
+        }
+    }, [data.totalPower, data.voltage, data.totalConsumers, data.length]);
 
     // Проверка данных
     const validationResults = {
@@ -69,44 +93,56 @@ export default function Step4() {
     const calculated = calculateParameters();
 
     const handleConfirm = () => {
+        // Сохраняем полную конфигурацию
+        const savedConfig = saveCompleteConfiguration();
         setIsConfirmed(true);
+
         // Здесь можно добавить отправку данных на сервер
-        console.log('Конфигурация подтверждена:', data);
+        console.log('Конфигурация подтверждена:', savedConfig);
+
+        // Можно показать уведомление
+        alert('✅ Конфигурация успешно сохранена!');
     };
 
+    // Копировать в буфер
     const handleCopyToClipboard = () => {
         const configText = `
-Конфигурация электрической линии:
-==============================
-1. Основные параметры:
-   - Длина линии: ${data.length} м
-   - Количество жил: ${data.poles}
-   
-2. Параметры питания:
-   - Напряжение: ${data.voltage} В
-   - Тип питания: ${data.powerType === 'end' ? 'Концевое' : 'Линейное'}
-   ${data.length > 150 ? '  (автоматически выбрано линейное питание)' : ''}
-   
-3. Потребители:
-   - Количество: ${data.totalConsumers} шт
-   - Общая мощность: ${data.totalPower} кВт
-   ${
-       data.showIndividualPowers && data.individualPowers && data.individualPowers.length > 0
-           ? `  - Индивидуальные мощности: ${data.individualPowers.map((p, i) => `П${i + 1}: ${p.power} кВт`).join(', ')}`
-           : ''
-   }
-        
-4. Расчетные параметры:
-   - Общий ток: ${calculated.totalCurrent} А
-   - Рекомендуемое сечение кабеля: ${calculated.recommendedCableSection} мм²
-   - Макс. длина без потерь: ${calculated.maxLengthForVoltageDrop} м
-==============================
-        `.trim();
+            Конфигурация электрической линии:
+            ==============================
+            1. Основные параметры:
+            - Длина линии: ${data.length} м
+            - Количество жил: ${data.poles}
+            
+            2. Параметры питания:
+            - Напряжение: ${data.voltage} В
+            - Тип питания: ${data.powerType === 'end' ? 'Концевое' : 'Линейное'}
+            ${data.length > 150 ? '  (автоматически выбрано линейное питание)' : ''}
+            
+            3. Потребители:
+            - Количество: ${data.totalConsumers} шт
+            - Общая мощность: ${data.totalPower} кВт
+            ${
+                data.showIndividualPowers &&
+                data.individualPowers &&
+                data.individualPowers.length > 0
+                    ? `  - Индивидуальные мощности: ${data.individualPowers.map((p, i) => `П${i + 1}: ${p.power} кВт`).join(', ')}`
+                    : ''
+            }
+                    
+            4. Расчетные параметры:
+            - Общий ток: ${calculated.totalCurrent} А
+            - Рекомендуемое сечение кабеля: ${calculated.recommendedCableSection} мм²
+            - Макс. длина без потерь: ${calculated.maxLengthForVoltageDrop} м
+            - Коэффициент одновременности: ${calculations?.simultaneityFactor || 'N/A'} (${Math.round((calculations?.simultaneityFactor || 0) * 100)}%)
+            ==============================
+            Дата сохранения: ${new Date().toLocaleString('ru-RU')}
+            `.trim();
 
         navigator.clipboard.writeText(configText);
         alert('Конфигурация скопирована в буфер обмена!');
     };
 
+    // Экспорт в json
     const handleExportJSON = () => {
         const jsonData = {
             config: data,
@@ -126,9 +162,35 @@ export default function Step4() {
         linkElement.click();
     };
 
+    // Печать
     const handlePrint = () => {
         window.print();
     };
+
+    const handleViewSaved = () => {
+        try {
+            const saved = localStorage.getItem('saved-configurations');
+            const configurations = saved ? JSON.parse(saved) : [];
+            console.log('Сохраненные конфигурации:', configurations);
+            alert(
+                `Найдено ${configurations.length} сохраненных конфигураций. Проверьте консоль для деталей.`,
+            );
+        } catch (error) {
+            console.error('Ошибка чтения сохраненных конфигураций:', error);
+        }
+    };
+
+    if (!calculations) {
+        return (
+            <Card>
+                <CardContent className="pt-6 text-center py-12">
+                    <div className="animate-pulse">
+                        <p className="text-gray-600">Выполняется расчет параметров...</p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -139,10 +201,18 @@ export default function Step4() {
                 ) : (
                     <AlertCircle className="h-4 w-4" />
                 )}
-                <AlertDescription>
-                    {allValid
-                        ? '✅ Все данные корректны и готовы к сохранению'
-                        : '⚠️ Обнаружены ошибки в конфигурации. Пожалуйста, исправьте их перед сохранением.'}
+                <AlertDescription className="flex justify-between items-center">
+                    <span>
+                        {allValid
+                            ? '✅ Все данные корректны и готовы к сохранению'
+                            : '⚠️ Обнаружены ошибки в конфигурации. Пожалуйста, исправьте их перед сохранением.'}
+                    </span>
+                    {data.calculations && (
+                        <Badge variant="outline" className="ml-2">
+                            <Database className="h-3 w-3 mr-1" />
+                            Расчет выполнен
+                        </Badge>
+                    )}
                 </AlertDescription>
             </Alert>
 
@@ -437,10 +507,10 @@ export default function Step4() {
                                 <Button
                                     variant="outline"
                                     className="flex items-center gap-2"
-                                    onClick={() => alert('Функция в разработке')}
+                                    onClick={handleViewSaved}
                                 >
-                                    <Share2 className="h-4 w-4" />
-                                    Поделиться
+                                    <Database className="h-4 w-4" />
+                                    Просмотр
                                 </Button>
                             </div>
 
@@ -463,10 +533,13 @@ export default function Step4() {
                                     {isConfirmed ? (
                                         <>
                                             <CheckCircle className="h-4 w-4 mr-2" />
-                                            Подтверждено
+                                            Сохранено
                                         </>
                                     ) : (
-                                        'Подтвердить и сохранить'
+                                        <>
+                                            <Save className="h-4 w-4 mr-2" />
+                                            Сохранить конфигурацию
+                                        </>
                                     )}
                                 </Button>
 
@@ -533,6 +606,12 @@ export default function Step4() {
                             )}
                         </ul>
                     </div>
+
+                    {data.calculations && (
+                        <div className="mt-4 text-sm text-gray-500 text-right">
+                            Расчет выполнен: {new Date(data.savedAt || '').toLocaleString('ru-RU')}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

@@ -9,6 +9,18 @@ export interface Consumer {
     power: number;
 }
 
+// Добавляем расчетные параметры
+export interface CalculationResult {
+    totalCurrent: number;
+    recommendedCableSection: number;
+    maxLengthForVoltageDrop: number;
+    recommendedBreaker: number;
+    voltageDropPercent: number;
+    simultaneityFactor: number;
+    phaseCurrent: number;
+    baseCurrentWithoutFactor: number;
+}
+
 export interface ConfigurationData {
     // Шаг 1
     length: number;
@@ -23,4 +35,9 @@ export interface ConfigurationData {
     totalPower: number;
     showIndividualPowers: boolean;
     individualPowers: Consumer[];
+
+    // Шаг 4 - расчетные параметры
+    calculations?: CalculationResult;
+    savedAt?: string;
+    status?: 'draft' | 'calculated' | 'saved' | 'approved';
 }

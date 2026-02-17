@@ -1,5 +1,5 @@
 // src/app/configuration/utils/calculations.ts
-import { ConfigurationData } from '../steps/shared/types';
+import { ConfigurationData, CalculationResult } from '../steps/shared/types';
 
 // Коэффициенты для разных количеств потребителей
 const CONSUMER_FACTORS: Record<number, number> = {
@@ -28,44 +28,13 @@ export function calculateTotalCurrent(data: ConfigurationData): number {
     const factor = CONSUMER_FACTORS[consumerCount] || 1; // По умолчанию минимальный коэффициент
 
     // Применяем коэффициент
-    const adjustedCurrent = Math.ceil(baseCurrent * factor);  // Округляем до целого значения
+    const adjustedCurrent = Math.ceil(baseCurrent * factor); // Округляем до целого значения
 
     return adjustedCurrent;
 }
 
-// Альтернативная реализация с switch-case для наглядности
-export function calculateTotalCurrentAlt(data: ConfigurationData): number {
-    const baseCurrent = (data.totalPower * 1000) / (data.voltage * 1.73 * 0.8 * 0.9);
-
-    switch (data.totalConsumers) {
-        case 1:
-            return baseCurrent * 1.0; // 100%
-        case 2:
-            return baseCurrent * 0.95; // 95%
-        case 3:
-            return baseCurrent * 0.9; // 90%
-        case 4:
-            return baseCurrent * 0.85; // 85%
-        case 5:
-            return baseCurrent * 0.8; // 80%
-        case 6:
-            return baseCurrent * 0.75; // 75%
-        case 7:
-            return baseCurrent * 0.7; // 70%
-        case 8:
-            return baseCurrent * 0.65; // 65%
-        case 9:
-            return baseCurrent * 0.6; // 60%
-        case 10:
-            return baseCurrent * 0.55; // 55%
-        default:
-            // Для больше 10 потребителей используем минимальный коэффициент
-            return baseCurrent * 0.55;
-    }
-}
-
 // Полный расчет всех параметров с новой формулой
-export function performCompleteCalculations(data: ConfigurationData) {
+export function performCompleteCalculations(data: ConfigurationData): CalculationResult {
     // Расчет тока с учетом количества потребителей
     const totalCurrent = calculateTotalCurrent(data);
 
@@ -79,18 +48,14 @@ export function performCompleteCalculations(data: ConfigurationData) {
     const voltageDropPercent = (voltageDrop / data.voltage) * 100;
 
     // Максимальная длина без потерь (макс 5% падения)
-    const maxLengthFor5Percent =
+    const maxLengthForVoltageDrop =
         (data.voltage * 0.05) / (((totalCurrent * 0.018) / recommendedCableSection) * 1.73);
 
     // Рекомендуемый автомат (с запасом 25%)
     const recommendedBreaker = Math.ceil(totalCurrent * 1.25);
 
-    // Стоимость (примерно)
-    const cablePricePerMM2 = 120; // руб/м за мм²
-    const installationCost = 300; // руб за точку подключения
-    const estimatedCost =
-        data.length * recommendedCableSection * cablePricePerMM2 +
-        data.totalConsumers * installationCost;
+    // Ток на фазу
+    const phaseCurrent = totalCurrent / 3;
 
     // Коэффициент одновременности (для справки)
     const simultaneityFactor = CONSUMER_FACTORS[Math.min(data.totalConsumers, 10)] || 0.55;
@@ -98,18 +63,14 @@ export function performCompleteCalculations(data: ConfigurationData) {
     return {
         totalCurrent: parseFloat(totalCurrent.toFixed(2)),
         recommendedCableSection: parseFloat(recommendedCableSection.toFixed(2)),
-        voltageDrop: parseFloat(voltageDrop.toFixed(2)),
         voltageDropPercent: parseFloat(voltageDropPercent.toFixed(1)),
-        maxLengthFor5Percent: parseFloat(maxLengthFor5Percent.toFixed(0)),
+        maxLengthForVoltageDrop: parseFloat(maxLengthForVoltageDrop.toFixed(0)),
         recommendedBreaker,
-        estimatedCost: Math.round(estimatedCost),
         simultaneityFactor: parseFloat(simultaneityFactor.toFixed(2)),
         baseCurrentWithoutFactor: parseFloat(
             ((data.totalPower * 1000) / (data.voltage * 1.73 * 0.8 * 0.9)).toFixed(2),
         ),
-        consumerCount: data.totalConsumers,
         phaseCurrent: parseFloat((totalCurrent / 3).toFixed(2)), // Для трехфазной
-        safetyFactor: 1.25,
     };
 }
 

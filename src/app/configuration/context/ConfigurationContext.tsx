@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ConfigurationData } from '../steps/shared/types';
+import { ConfigurationData, CalculationResult } from '../steps/shared/types';
 
 interface ConfigurationContextType {
     data: ConfigurationData;
@@ -11,6 +11,8 @@ interface ConfigurationContextType {
     goToNextStep: () => void;
     goToPrevStep: () => void;
     resetData: () => void;
+    updateCalculations: (calculations: CalculationResult) => void;
+    saveCompleteConfiguration: () => void;
 }
 
 const ConfigurationContext = createContext<ConfigurationContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ const initialData: ConfigurationData = {
     totalPower: 10,
     showIndividualPowers: false,
     individualPowers: [],
+    status: 'draft',
 };
 
 export function ConfigurationProvider({ children }: { children: ReactNode }) {
@@ -33,6 +36,37 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
 
     const updateData = (updates: Partial<ConfigurationData>) => {
         setData((prev) => ({ ...prev, ...updates }));
+    };
+
+    // Новый метод для обновления расчетов
+    const updateCalculations = (calculations: CalculationResult) => {
+        setData((prev) => ({
+            ...prev,
+            calculations,
+            savedAt: new Date().toISOString(),
+        }));
+    };
+
+    // Новый метод для полного сохранения (данные + расчеты)
+    const saveCompleteConfiguration = () => {
+        const completeData = {
+            ...data,
+            savedAt: new Date().toISOString(),
+            status: 'calculated' as const,
+        };
+
+        // Сохраняем в localStorage
+        try {
+            const saved = localStorage.getItem('saved-configurations');
+            const configurations = saved ? JSON.parse(saved) : [];
+            configurations.push(completeData);
+            localStorage.setItem('saved-configurations', JSON.stringify(configurations));
+            console.log('Конфигурация сохранена:', completeData);
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+        }
+
+        return completeData;
     };
 
     // Управление шагами
@@ -72,6 +106,8 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
                 goToNextStep,
                 goToPrevStep,
                 resetData,
+                updateCalculations,
+                saveCompleteConfiguration,
             }}
         >
             {children}
