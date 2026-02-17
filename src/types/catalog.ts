@@ -2,7 +2,7 @@
 export type ProductCategory = 'busbars' | 'components';
 
 // Типы шинопровода
-export type BusbarType = 'trolley' | 'mono-trolley';
+export type BusbarType = 'trolley' | 'monotrolley';
 
 // Типы компонентов
 export type ComponentType =
@@ -37,6 +37,7 @@ export interface BusbarSeries {
 export interface ComponentSpecs {
     amperage?: number;
     poles?: number;
+    lenght?: number;
     material?: string;
 }
 

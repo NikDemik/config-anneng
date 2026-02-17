@@ -1,10 +1,5 @@
 export type PowerType = 'end' | 'linear';
 
-// export type Step1Data = {
-//     length: number;
-//     poles: number;
-// };
-
 export interface Consumer {
     power: number;
 }
@@ -12,13 +7,9 @@ export interface Consumer {
 // Добавляем расчетные параметры
 export interface CalculationResult {
     totalCurrent: number;
-    recommendedCableSection: number;
-    maxLengthForVoltageDrop: number;
-    recommendedBreaker: number;
-    voltageDropPercent: number;
-    simultaneityFactor: number;
     phaseCurrent: number;
     baseCurrentWithoutFactor: number;
+    simultaneityFactor: number;
 }
 
 export interface ConfigurationData {

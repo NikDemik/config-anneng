@@ -74,23 +74,16 @@ export default function Step4() {
         validationResults.lengthAndPowerType();
 
     // Расчетные параметры
-    const calculateParameters = () => {
-        // Пример расчетов - можно расширить
-        const totalCurrent = calculateTotalCurrent(data); // Для трехфазной
-        // const totalCurrent = (data.totalPower * 1000) / (data.voltage * 1.73 * 0.8 * 0.9);
-        const recommendedCableSection = Math.max(1.5, totalCurrent / 6); // Упрощенный расчет
+    // const calculateParameters = () => {
+    //     // Пример расчетов - можно расширить
+    //     const totalCurrent = calculateTotalCurrent(data); // Для трехфазной
 
-        return {
-            totalCurrent: totalCurrent.toFixed(2),
-            recommendedCableSection: recommendedCableSection.toFixed(2),
-            maxLengthForVoltageDrop: (
-                (data.voltage * 0.05 * 1000) /
-                (totalCurrent * 0.018)
-            ).toFixed(0), // 5% падение
-        };
-    };
+    //     return {
+    //         totalCurrent: totalCurrent.toFixed(2),
+    //     };
+    // };
 
-    const calculated = calculateParameters();
+    const calculated = performCompleteCalculations(data);
 
     const handleConfirm = () => {
         // Сохраняем полную конфигурацию
@@ -131,8 +124,6 @@ export default function Step4() {
                     
             4. Расчетные параметры:
             - Общий ток: ${calculated.totalCurrent} А
-            - Рекомендуемое сечение кабеля: ${calculated.recommendedCableSection} мм²
-            - Макс. длина без потерь: ${calculated.maxLengthForVoltageDrop} м
             - Коэффициент одновременности: ${calculations?.simultaneityFactor || 'N/A'} (${Math.round((calculations?.simultaneityFactor || 0) * 100)}%)
             ==============================
             Дата сохранения: ${new Date().toLocaleString('ru-RU')}
@@ -435,40 +426,7 @@ export default function Step4() {
                                         При напряжении {data.voltage} В
                                     </div>
                                 </div>
-                                {/* <div className="bg-green-50 p-3 rounded">
-                                    <div className="text-sm text-green-600">
-                                        Рекомендуемое сечение
-                                    </div>
-                                    <div className="text-xl font-bold text-green-700">
-                                        {calculated.recommendedCableSection} мм²
-                                    </div>
-                                    <div className="text-xs text-green-500 mt-1">
-                                        Медь, 3-фазная сеть
-                                    </div>
-                                </div> */}
                             </div>
-                            {/* <div className="bg-amber-50 p-3 rounded">
-                                <div className="text-sm text-amber-600">
-                                    Максимальная длина без потерь
-                                </div>
-                                <div className="text-xl font-bold text-amber-700">
-                                    {calculated.maxLengthForVoltageDrop} м
-                                </div>
-                                <div className="text-xs text-amber-500 mt-1">
-                                    Допустимое падение напряжения 5%
-                                </div>
-                            </div> */}
-
-                            {/* {parseInt(calculated.maxLengthForVoltageDrop) < data.length && (
-                                <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                        Внимание! Длина линии ({data.length} м) превышает
-                                        рекомендуемую для выбранных параметров. Рассмотрите
-                                        увеличение сечения кабеля или снижение мощности.
-                                    </AlertDescription>
-                                </Alert>
-                            )} */}
                         </CardContent>
                     </Card>
 
@@ -588,14 +546,6 @@ export default function Step4() {
                     <div className="mt-6 p-4 bg-blue-50 rounded border border-blue-200">
                         <h4 className="font-bold text-blue-700 mb-2">Рекомендации:</h4>
                         <ul className="space-y-1 text-sm text-blue-600">
-                            <li>
-                                • Используйте кабель сечением не менее{' '}
-                                {calculated.recommendedCableSection} мм²
-                            </li>
-                            <li>
-                                • Для защиты используйте автомат на{' '}
-                                {Math.ceil(parseFloat(calculated.totalCurrent) * 1.25)}А
-                            </li>
                             <li>
                                 • Проверьте соответствие выбранного типа питания (
                                 {data.powerType === 'end' ? 'концевого' : 'линейного'}) требованиям

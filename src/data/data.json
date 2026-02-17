@@ -46,7 +46,7 @@
             "imageUrl": "/image/products/component.jpg",
             "price": 3400,
             "type": "Секция",
-            "specs": { "amperage": 35, "poles": 4 },
+            "specs": { "amperage": 35, "poles": 4, "lenght": 4 },
             "categoryId": "components",
             "brandId": "anneng",
             "seriesId": "hfp56"
@@ -140,16 +140,15 @@
     "busbars": [
         {
             "id": "560814-A-K",
-            "name": "Рельсовый проводник Anneng 35A HFP56-4-8/35",
-            "description": "Рельсовый проводник Anneng 35A HFP56-4-8/35",
+            "name": "Троллейный шинопровод Anneng 35A HFP56-4-8/35",
+            "description": "Троллейный шинопровод Anneng 35A HFP56-4-8/35",
             "imageUrl": "/image/products/busbar.jpg",
             "amperage": 35,
             "price": 3400,
-            "specs": { "amperage": 35, "poles": 4 },
-            "categoryId": 1,
-            "brandId": 1,
-            "typeId": 1,
-            "seriesId": 1,
+            "specs": { "amperage": 35, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
             "components": [
                 { "componentId": 1, "quantity": 1 },
                 { "componentId": 2, "quantity": 3 },
