@@ -1,0 +1,255 @@
+{
+    "categories": [
+        {
+            "id": "busbar",
+            "name": "Шинопроводы",
+            "description": "Троллейные шинопроводы для промышленных и крановых систем"
+        },
+        {
+            "id": "components",
+            "name": "Комплектующие",
+            "description": "Контактные щетки, держатели, подвесы, кронштейны, токосъемники и другое"
+        }
+    ],
+
+    "brands": [{ "id": "anneng", "name": "Anneng" }],
+
+    "busbarTypes": [
+        { "id": "trolley", "name": "Троллейный" },
+        { "id": "monotrolley", "name": "Монотроллейный" }
+    ],
+
+    "series": [
+        {
+            "id": "hfp56",
+            "name": "HFP56",
+            "brandId": "anneng",
+            "typeId": "trolley",
+            "description": "Троллейный шинопровод Anneng серии HFP56",
+            "imageUrl": "/image/series/main.png",
+            "amperageRange": { "min": 35, "max": 240 },
+            "polesAvailable": [4]
+        },
+        {
+            "id": "hfp52",
+            "name": "HFP52",
+            "brandId": "anneng",
+            "typeId": "trolley",
+            "description": "Троллейный шинопровод Anneng серии HFP52",
+            "imageUrl": "/image/series/main.png",
+            "amperageRange": { "min": 35, "max": 240 },
+            "polesAvailable": [5, 6, 7]
+        }
+    ],
+
+    "componentTypes": [
+        { "id": "section", "name": "Секция", "required": true },
+        { "id": "end_cap", "name": "Крышка концевая", "required": true },
+        { "id": "joint_cover", "name": "Крышка стыковая", "required": true },
+        { "id": "power_feed", "name": "Подвод питания", "required": true },
+        { "id": "suspension_fixed", "name": "Подвес фиксирующий", "required": true },
+        { "id": "suspension_sliding", "name": "Подвес скользящий", "required": true },
+        { "id": "current_collector", "name": "Токосъемник", "required": true },
+        { "id": "collector_grip", "name": "Захват токосъёмника", "required": true }
+    ],
+
+    "components": [
+        {
+            "id": "560814-A",
+            "name": "Рельсовый проводник Anneng 35A HFP56-4-8/35",
+            "description": "Рельсовый проводник Anneng 35A HFP56-4-8/35",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 3400,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 35, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "560014-A",
+            "name": "Рельсовый проводник Anneng 50A HFP56-4-10/50",
+            "description": "Рельсовый проводник Anneng 35A 50A HFP56-4-10/50",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 3646,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 50, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "561214-A",
+            "name": "Рельсовый проводник Anneng 65A HFP56-4-12/65",
+            "description": "Рельсовый проводник Anneng 65A HFP56-4-12/65",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 65, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "563401",
+            "name": "Крышка стыковая Anneng 56LJ-45",
+            "description": "Крышка стыковая Anneng HFP56 56LJ-45 (35A - 100A)",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 585,
+            "type": "Крышка стыковая",
+            "typeId": "joint_cover",
+            "specs": { "amperage": { "min": 35, "max": 100 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 35, "max": 100 }
+            }
+        },
+        {
+            "id": "563912",
+            "name": "Подвес скользящий Anneng 56DJ-4",
+            "description": "Подвес скользящий Anneng HFP56 56DJ-4 (35A - 100A)",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 355,
+            "type": "Подвес скользящий",
+            "typeId": "suspension_sliding",
+            "specs": { "amperage": { "min": 35, "max": 100 }, "material": "металл" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 35, "max": 100 }
+            },
+            "quantityPerMeter": 3
+        },
+        {
+            "id": "563902",
+            "name": "Подвес фиксирующий  Anneng 56DJ-3",
+            "description": "Подвес фиксирующий Anneng HFP56 56DJ-3 (35A - 100A)",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 466,
+            "type": "Подвес фиксирующий",
+            "typeId": "suspension_fixed",
+            "specs": { "amperage": { "min": 35, "max": 100 }, "material": "металл" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 35, "max": 100 }
+            },
+            "quantityPerMeter": 1
+        },
+        {
+            "id": "563701",
+            "name": "Крышка концевая Anneng 56DM",
+            "description": "Крышка концевая Anneng для HFP56 56DM",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 437,
+            "type": "Крышка концевая",
+            "typeId": "end_cap",
+            "specs": { "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 35, "max": 240 }
+            }
+        },
+        {
+            "id": "564685",
+            "name": "Концевой подвод питания Anneng 56DG",
+            "description": "Концевой подвод питания Anneng 56DG для HFP56",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания",
+            "typeId": "power_feed",
+            "specs": { "amperage": { "min": 35, "max": 100 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 35, "max": 100 }
+            }
+        },
+        {
+            "id": "563125",
+            "name": "Токосъёмник Anneng 56JD-4/25",
+            "description": "Токосъёмник Anneng 56JD-4/25 для HFP56",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 6300,
+            "type": "Токосъемник",
+            "typeId": "current_collector",
+            "specs": { "amperage": 25, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 25, "max": 240 }
+            }
+        },
+        {
+            "id": "563140",
+            "name": "Токосъёмник Anneng 56JD-4/40",
+            "description": "Токосъёмник Anneng 56JD-4/40 для HFP56",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 6900,
+            "type": "Токосъемник",
+            "typeId": "current_collector",
+            "specs": { "amperage": 40, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 25, "max": 240 }
+            }
+        },
+        {
+            "id": "565053",
+            "name": "Захват токосъёмника Anneng 56BC/53",
+            "description": "Захват токосъёмника Anneng 56BC/53 для HFP56",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 462,
+            "type": "Захват",
+            "typeId": "collector_grip",
+            "specs": { "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 25, "max": 240 }
+            }
+        }
+    ],
+
+    "busbars": [
+        {
+            "id": "560814-A-K",
+            "name": "Троллейный шинопровод Anneng 35A HFP56-4-8/35",
+            "description": "Троллейный шинопровод Anneng 35A HFP56-4-8/35",
+            "imageUrl": ["/image/products/busbar.jpg"],
+            "amperage": 35,
+            "price": 3400,
+            "specs": { "amperage": 35, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "components": [
+                { "componentId": 1, "quantity": 1 },
+                { "componentId": 2, "quantity": 3 },
+                { "componentId": 3, "quantity": 4 }
+            ]
+        }
+    ]
+}

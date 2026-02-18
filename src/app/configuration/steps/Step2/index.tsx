@@ -1,7 +1,7 @@
 // src/app/configuration/steps/Step2/index.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { FieldGroup } from '@/components/ui/field';
@@ -15,6 +15,7 @@ import PowerTypeField from './fields/PowerTypeField';
 
 export default function Step2() {
     const { data, updateData, goToPrevStep, goToNextStep } = useConfiguration();
+    const isEffectRun = useRef(false); // Предотвращаем множественные обновления
 
     const form = useForm<ConfigurationData>({
         resolver: zodResolver(step2Schema as any),
@@ -39,16 +40,24 @@ export default function Step2() {
         const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
 
         if (isForcedLinear) {
-            // 1. Обновляем форму
-            form.setValue('powerType', POWER_TYPES.LINEAR, {
-                shouldValidate: true,
-                shouldDirty: true,
-            });
+            // Проверяем, нужно ли обновлять (чтобы избежать бесконечного цикла)
+            const currentPowerType = form.getValues('powerType');
 
-            // 2. Обновляем глобальный контекст
-            updateData({ powerType: POWER_TYPES.LINEAR });
+            if (currentPowerType !== POWER_TYPES.LINEAR && !isEffectRun.current) {
+                isEffectRun.current = true;
+                // 1. Обновляем форму
+                form.setValue('powerType', POWER_TYPES.LINEAR, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                });
+
+                // 2. Обновляем глобальный контекст
+                updateData({ powerType: POWER_TYPES.LINEAR });
+            }
+        } else {
+            isEffectRun.current = false;
         }
-    }, [length, form, updateData]);
+    }, [length, form, updateData]); // Убираем лишние зависимости
 
     return (
         <form onSubmit={onSubmit} className="space-y-6">

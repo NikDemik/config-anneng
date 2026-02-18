@@ -15,6 +15,7 @@ import {
     Copy,
     Save,
     Database,
+    ShoppingCart,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -499,6 +500,15 @@ export default function Step4() {
                                             Сохранить конфигурацию
                                         </>
                                     )}
+                                </Button>
+
+                                <Button
+                                    className={`w-full ${allValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'}`}
+                                    onClick={() => goToStep(5)}
+                                    disabled={!allValid || !data.calculations}
+                                >
+                                    <ShoppingCart className="h-4 w-4 mr-2" />
+                                    Подобрать комплектующие
                                 </Button>
 
                                 {!allValid && (

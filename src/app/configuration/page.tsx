@@ -1,8 +1,8 @@
 // src/app/configuration/page.tsx
 'use client';
 
-import ConfigurationSteps from './ConfigurationSteps';
+import ConfigurationLayout from './NewLayout';
 
 export default function ConfigurationPage() {
-    return <ConfigurationSteps />;
+    return <ConfigurationLayout />;
 }
