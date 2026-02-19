@@ -1,4 +1,4 @@
-export type PowerType = 'end' | 'linear';
+export type PowerType = 'end' | 'end2' | 'linear';
 
 export interface Consumer {
     power: number;
@@ -20,6 +20,7 @@ export interface ConfigurationData {
     // Шаг 2
     voltage: number;
     powerType: PowerType;
+    powerTypeOverride?: boolean;
 
     // Шаг 3
     totalConsumers: number;

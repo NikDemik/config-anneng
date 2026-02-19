@@ -131,7 +131,8 @@ class CatalogService {
 
     // Сборка полного комплекта
     async buildKit(configData: any): Promise<ConfigurationResult> {
-        const { length, poles, voltage, totalPower, totalConsumers, calculations } = configData;
+        const { length, poles, powerType, voltage, totalPower, totalConsumers, calculations } =
+            configData;
 
         const requiredAmperage = Math.ceil(calculations.totalCurrent);
         const seriesId = 'hfp56'; // Можно определять по другим параметрам
@@ -160,15 +161,22 @@ class CatalogService {
             collectorGrips: accessories.filter((c) => c.typeId === 'collector_grip'),
         };
 
+        // Расчет количества крышек концевых
+        const endcapCount = powerType === 'end' ? 1 : 2;
+
+        // Расчет количества крышек стыковых
+        const jointCoverCount = sectionCount - 1; // Крышки стыков на количество соединений
+
         // Расчет количества фиксирующих подвесов
         function calculateSuspensionCount(length: number): number {
             return length <= 75 ? 1 : Math.floor(length / 75) + 1;
         }
         const suspensionFixedCount = calculateSuspensionCount(length);
 
-        // Расчет количества комплектующих
+        // Расчет количества скользящих подвесов
         const suspensionCount = Math.ceil(length / 4) * 3 - suspensionFixedCount; // Подвесы через каждые 1.3 метра
-        const jointCoverCount = sectionCount - 1; // Крышки стыков на количество соединений
+
+        // Расчет количества комплектующих
         const currentCollectorCount = totalConsumers; // По количеству потребителей
 
         // Расчет стоимости
@@ -176,7 +184,7 @@ class CatalogService {
             sectionsCount: sectionCount,
             sectionsPrice: optimalSection.price * sectionCount,
             accessoriesCount: {
-                endCaps: 1, // По 1 на линию
+                endCaps: endcapCount, // По 1 на линию
                 jointCovers: jointCoverCount,
                 powerFeeds: 1, // Как минимум 1
                 fixedSuspensions: suspensionFixedCount,

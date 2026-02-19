@@ -1,5 +1,6 @@
 export const POWER_TYPES = {
     END: 'end' as const,
+    END2: 'end2' as const,
     LINEAR: 'linear' as const,
 } as const;
 

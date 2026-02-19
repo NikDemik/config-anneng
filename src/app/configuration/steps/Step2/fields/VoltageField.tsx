@@ -34,8 +34,8 @@ export default function VoltageField({ control }: VoltageFieldProps) {
                         className="text-lg"
                     />
                     <FieldDescription>
-                        Напряжение питания линии (от 24 до 1000 В). Стандартные значения: 24В, 48В,
-                        110В, 220В, 380В, 660В.
+                        Напряжение питания линии (от 220 до 1000 В). Стандартные значения: 220 В,
+                        380 В (400 В), 660 В (690 В).
                     </FieldDescription>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>

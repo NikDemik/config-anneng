@@ -9,29 +9,74 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Control } from 'react-hook-form';
+import { Control, useController } from 'react-hook-form';
 import { ConfigurationData } from '../../shared/types';
 import { POWER_TYPES, MAX_LENGTH_FOR_END_POWER } from '../../shared/constants';
 import { Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useEffect } from 'react';
 
 interface PowerTypeFieldProps {
     control: Control<ConfigurationData>;
     length: number;
+    isForcedLinear?: boolean;
 }
 
 export default function PowerTypeField({ control, length }: PowerTypeFieldProps) {
     const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
-    // const isLengthOver150 = length > MAX_LENGTH_FOR_END_POWER;
-    // const isForcedLinear = isLengthOver150;
+    const [overrideType, setOverrideType] = useState(false);
+
+    const { field } = useController({
+        name: 'powerType',
+        control,
+        rules: { required: true },
+    });
+
+    const { field: overrideField } = useController({
+        name: 'powerTypeOverride',
+        control,
+    });
+
+    // Сброс чекбокса при изменении длины, если длина становится <= 150
+    useEffect(() => {
+        if (!isForcedLinear) {
+            setOverrideType(false);
+        }
+    }, [isForcedLinear]);
+
+    // Определяем, активен ли селектор
+    const isSelectDisabled = isForcedLinear && !overrideType;
+
+    // Определяем текущее значение для селектора
+    const selectValue = isForcedLinear && !overrideType ? POWER_TYPES.LINEAR : field.value;
+
+    const handleOverrideChange = (checked: boolean) => {
+        setOverrideType(checked);
+
+        // Если чекбокс снят и длина > 150, устанавливаем линейное питание
+        if (!checked && isForcedLinear) {
+            field.onChange(POWER_TYPES.LINEAR);
+        }
+    };
 
     return (
         <div className="space-y-4">
-            {isForcedLinear && (
+            {isForcedLinear && !overrideType && (
                 <Alert className="bg-amber-50 border-amber-200">
                     <Info className="h-4 w-4 text-amber-600" />
                     <AlertDescription className="text-amber-800">
-                        При длине линии {length} м (более 150 м) доступно только линейное питание.
+                        При длине линии {length} м (более 150 м) рекомендуется линейное питание.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {isForcedLinear && overrideType && (
+                <Alert className="bg-blue-50 border-blue-200">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                        Внимание: вы выбрали нестандартный тип питания для линии длиной {length} м.
+                        Убедитесь, что это технически реализуемо.
                     </AlertDescription>
                 </Alert>
             )}
@@ -43,16 +88,17 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
                     <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="powerType">
                             Тип питания
-                            {isForcedLinear && ' (автоматически выбрано)'}
+                            {isForcedLinear && !overrideType && ' (автоматически выбрано)'}
                         </FieldLabel>
+
                         <Select
-                            value={isForcedLinear ? POWER_TYPES.LINEAR : field.value}
+                            value={selectValue}
                             onValueChange={(value) => {
-                                if (!isForcedLinear) {
+                                if (!isSelectDisabled) {
                                     field.onChange(value);
                                 }
                             }}
-                            disabled={isForcedLinear}
+                            disabled={isSelectDisabled}
                         >
                             <SelectTrigger
                                 id="powerType"
@@ -62,22 +108,53 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value={POWER_TYPES.END}>Концевое питание</SelectItem>
+                                <SelectItem value={POWER_TYPES.END2}>
+                                    Концевое питание c двух сторон
+                                </SelectItem>
                                 <SelectItem value={POWER_TYPES.LINEAR}>Линейное питание</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        {/* Чекбокс для принудительного изменения типа питания */}
+                        {isForcedLinear && (
+                            <div className="flex items-center space-x-2 mt-2">
+                                <Checkbox
+                                    id="override-power-type"
+                                    checked={overrideType}
+                                    onCheckedChange={handleOverrideChange}
+                                />
+                                <label
+                                    htmlFor="override-power-type"
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                >
+                                    Изменить тип питания (принудительно)
+                                </label>
+                            </div>
+                        )}
+
                         <FieldDescription>
-                            {isForcedLinear ? (
+                            {isForcedLinear && !overrideType ? (
                                 <div className="flex items-center text-amber-600">
                                     <Info className="h-4 w-4 mr-1" />
-                                    Автоматически выбрано линейное питание из-за большой длины линии
+                                    Автоматически выбрано линейное питание из-за длины линии более
+                                    150 м. Отметьте чекбокс выше, чтобы выбрать другой тип питания.
+                                </div>
+                            ) : isForcedLinear && overrideType ? (
+                                <div className="flex items-center text-blue-600">
+                                    <Info className="h-4 w-4 mr-1" />
+                                    Вы выбрали принудительное изменение типа питания. Убедитесь в
+                                    корректности расчетов.
                                 </div>
                             ) : (
                                 <>
-                                    Концевое питание — питание подается с одного конца линии (до 150
-                                    м).
+                                    Концевое питание — питание подается с одного конца линии
+                                    (рекомендуется до 75 - 100 м).
                                     <br />
-                                    Линейное питание — питание подается с двух сторон (для линий
-                                    более 150 м).
+                                    Концевое питание с двух сторон — питание подается с двух концов
+                                    линии (рекомендуется до 150 м).
+                                    <br />
+                                    Линейное питание — питание подается на любом участке линии (для
+                                    линий более 150 м).
                                 </>
                             )}
                         </FieldDescription>

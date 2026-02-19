@@ -11,11 +11,11 @@ import {
     AlertCircle,
     Download,
     Printer,
-    Share2,
     Copy,
     Save,
     Database,
     ShoppingCart,
+    Info,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -45,7 +45,7 @@ export default function Step4() {
         length: data.length > 0 && data.length <= 1000,
         poles: data.poles > 0 && data.poles <= 12,
         voltage: data.voltage >= 24 && data.voltage <= 1000,
-        powerType: data.powerType === 'end' || data.powerType === 'linear',
+        powerType: ['end', 'end2', 'linear'].includes(data.powerType),
         totalConsumers: data.totalConsumers > 0 && data.totalConsumers <= 12,
         totalPower: data.totalPower > 0 && data.totalPower <= 20000,
         powerMismatch: () => {
@@ -56,9 +56,14 @@ export default function Step4() {
             );
             return Math.abs(sum - data.totalPower) <= 0.1;
         },
+
+        // Проверка типа питания
         lengthAndPowerType: () => {
             if (data.length > 150) {
-                return data.powerType === 'linear';
+                // Если длина > 150, проверяем:
+                // 1. Либо выбран LINEAR (рекомендуемый вариант)
+                // 2. Либо включен override и выбран END или END2
+                return data.powerType === 'linear' || data.powerTypeOverride === true;
             }
             return true;
         },
@@ -184,6 +189,38 @@ export default function Step4() {
         );
     }
 
+    // Получение описания типа питания
+    const getPowerTypeDescription = (type: string, length: number, override?: boolean) => {
+        if (length > 150) {
+            if (type === 'linear') {
+                return override
+                    ? 'Линейное питание (принудительно)'
+                    : 'Линейное питание (рекомендуется для линий >150 м)';
+            } else if (type === 'end') {
+                return override
+                    ? 'Концевое питание (принудительный выбор)'
+                    : 'Концевое питание (не рекомендуется для длины >150 м)';
+            } else if (type === 'end2') {
+                return override
+                    ? 'Концевое питание с двух сторон (принудительный выбор)'
+                    : 'Концевое питание с двух сторон (не рекомендуется для длины >150 м)';
+            }
+        } else {
+            if (type === 'end') return 'Концевое питание';
+            if (type === 'end2') return 'Концевое питание с двух сторон';
+            if (type === 'linear') return 'Линейное питание';
+        }
+        return 'Не выбрано';
+    };
+
+    console.log('Debug:', {
+        length: data.length,
+        powerType: data.powerType,
+        powerTypeOverride: data.powerTypeOverride,
+        isValid: validationResults.lengthAndPowerType(),
+        condition: data.length > 150 && data.powerType !== 'linear' && data.powerTypeOverride,
+    });
+
     return (
         <div className="space-y-6">
             {/* Статус проверки */}
@@ -280,31 +317,116 @@ export default function Step4() {
                                             {validationResults.voltage ? '✓ Корректно' : 'Ошибка'}
                                         </Badge>
                                     </div>
+
                                     <div>
                                         <span className="text-gray-600">Тип питания:</span>
                                         <div className="font-bold">
-                                            {data.powerType === 'end' ? 'Концевое' : 'Линейное'}
-                                            {data.length > 150 && ' (автоматически)'}
+                                            {getPowerTypeDescription(
+                                                data.powerType,
+                                                data.length,
+                                                data.powerTypeOverride,
+                                            )}
                                         </div>
-                                        <Badge
+
+                                        {/* Логика для Badge */}
+                                        {(() => {
+                                            const isValid = validationResults.lengthAndPowerType();
+                                            const isForcedLinear =
+                                                data.length > 150 &&
+                                                data.powerType === 'linear' &&
+                                                !data.powerTypeOverride;
+                                            const isForcedOverride =
+                                                data.length > 150 &&
+                                                data.powerType !== 'linear' &&
+                                                data.powerTypeOverride;
+
+                                            if (!isValid) {
+                                                return <Badge variant="destructive">Ошибка</Badge>;
+                                            }
+
+                                            if (isForcedOverride) {
+                                                return (
+                                                    <Badge
+                                                        variant="warning"
+                                                        className="bg-amber-100 text-amber-800 border-amber-300"
+                                                    >
+                                                        ⚠️ Принудительный выбор
+                                                    </Badge>
+                                                );
+                                            }
+
+                                            if (isForcedLinear) {
+                                                return (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="bg-blue-50 text-blue-700 border-blue-200"
+                                                    >
+                                                        ℹ️ Автоматически
+                                                    </Badge>
+                                                );
+                                            }
+
+                                            return <Badge variant="default">✓ Корректно</Badge>;
+                                        })()}
+
+                                        {/* <Badge
                                             variant={
                                                 validationResults.lengthAndPowerType()
-                                                    ? 'default'
+                                                    ? data.length > 150 &&
+                                                      data.powerType !== 'linear' &&
+                                                      data.powerTypeOverride
+                                                        ? 'warning'
+                                                        : 'default'
                                                     : 'destructive'
+                                            }
+                                            className={
+                                                data.length > 150 &&
+                                                data.powerType !== 'linear' &&
+                                                data.powerTypeOverride
+                                                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                                    : ''
                                             }
                                         >
                                             {validationResults.lengthAndPowerType()
-                                                ? '✓ Корректно'
+                                                ? data.length > 150 &&
+                                                  data.powerType !== 'linear' &&
+                                                  data.powerTypeOverride
+                                                    ? '⚠️ Принудительный выбор'
+                                                    : '✓ Корректно'
                                                 : 'Ошибка'}
-                                        </Badge>
+                                        </Badge> */}
                                     </div>
                                 </div>
-                                {data.length > 150 && data.powerType === 'linear' && (
-                                    <div className="mt-2 text-sm text-amber-600">
-                                        ⚠️ Автоматически выбрано линейное питание из-за длины линии
-                                        &gt; 150 м
-                                    </div>
-                                )}
+
+                                {/* Информация о принудительном выборе */}
+                                {data.length > 150 &&
+                                    data.powerType !== 'linear' &&
+                                    data.powerTypeOverride && (
+                                        <Alert className="mt-3 bg-amber-50 border-amber-200">
+                                            <Info className="h-4 w-4 text-amber-600" />
+                                            <AlertDescription className="text-amber-800 text-sm">
+                                                Выбрано{' '}
+                                                <strong>
+                                                    {data.powerType === 'end'
+                                                        ? 'концевое'
+                                                        : 'концевое с двух сторон'}
+                                                </strong>{' '}
+                                                питание при длине линии{' '}
+                                                <strong>{data.length} м</strong> (принудительно).
+                                                Убедитесь в корректности расчетов.
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+
+                                {/* Стандартное предупреждение для линейного питания */}
+                                {data.length > 150 &&
+                                    data.powerType === 'linear' &&
+                                    !data.powerTypeOverride && (
+                                        <div className="mt-2 text-sm text-amber-600">
+                                            ⚠️ Автоматически выбрано линейное питание из-за длины
+                                            линии &gt; 150 м
+                                        </div>
+                                    )}
                             </div>
                         </div>
 

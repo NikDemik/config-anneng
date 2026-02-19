@@ -48,7 +48,7 @@ export const configurationSchema = z
             .max(1000, VALIDATION_MESSAGES.VOLTAGE_MAX)
             .or(z.literal('').transform(() => 0)),
 
-        powerType: z.enum([POWER_TYPES.END, POWER_TYPES.LINEAR], {
+        powerType: z.enum([POWER_TYPES.END, POWER_TYPES.END2, POWER_TYPES.LINEAR], {
             required_error: VALIDATION_MESSAGES.POWER_TYPE_REQUIRED,
         }),
 
