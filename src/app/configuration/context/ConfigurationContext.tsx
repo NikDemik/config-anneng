@@ -19,10 +19,10 @@ const ConfigurationContext = createContext<ConfigurationContextType | undefined>
 
 // Начальные данные конфигуратора
 const initialData: ConfigurationData = {
-    length: 60,
+    length: 160,
     poles: 4,
     voltage: 380,
-    powerType: 'end',
+    powerType: 'linear',
     powerTypeOverride: false,
     totalConsumers: 1,
     totalPower: 20,

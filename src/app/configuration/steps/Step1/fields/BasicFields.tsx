@@ -26,7 +26,7 @@ export default function BasicFields({ control }: BasicFieldsProps) {
                             type="number"
                             placeholder="Например: 30"
                             min={1}
-                            max={500}
+                            max={1000}
                             value={field.value === 0 ? '' : field.value}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -36,7 +36,7 @@ export default function BasicFields({ control }: BasicFieldsProps) {
                             className="text-lg"
                         />
                         <FieldDescription>
-                            Укажите длину линии от 1 до 500 метров.
+                            Укажите длину линии от 1 до 1000 метров.
                             {field.value > 150 && (
                                 <span className="text-amber-600 ml-1">
                                     При длине более 150 м будет применено линейное питание.

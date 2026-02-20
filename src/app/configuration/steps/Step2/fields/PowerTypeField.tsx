@@ -1,6 +1,7 @@
+// src/app/configuration/steps/Step2/fields/PowerTypeField.tsx
 'use client';
 
-import { Controller } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import {
     Select,
@@ -9,59 +10,97 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Control, useController } from 'react-hook-form';
+import { Control } from 'react-hook-form';
 import { ConfigurationData } from '../../shared/types';
 import { POWER_TYPES, MAX_LENGTH_FOR_END_POWER } from '../../shared/constants';
 import { Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useConfiguration } from '@/app/configuration/context/ConfigurationContext';
 
 interface PowerTypeFieldProps {
     control: Control<ConfigurationData>;
     length: number;
-    isForcedLinear?: boolean;
 }
 
 export default function PowerTypeField({ control, length }: PowerTypeFieldProps) {
+    const { updateData } = useConfiguration();
+    const { setValue, getValues } = useFormContext();
+
+    // Используем ref для отслеживания первого рендера
+    const isMounted = useRef(false);
+
     const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
-    const [overrideType, setOverrideType] = useState(false);
 
-    const { field } = useController({
-        name: 'powerType',
-        control,
-        rules: { required: true },
+    // Инициализируем состояние из формы, Локальное состояние только для UI
+    const [overrideType, setOverrideType] = useState(() => {
+        return getValues('powerTypeOverride') || false;
     });
 
-    const { field: overrideField } = useController({
-        name: 'powerTypeOverride',
-        control,
-    });
-
-    // Сброс чекбокса при изменении длины, если длина становится <= 150
+    // Синхронизация с формой при изменении длины
     useEffect(() => {
-        if (!isForcedLinear) {
-            setOverrideType(false);
+        // Пропускаем первый рендер
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
         }
-    }, [isForcedLinear]);
+        const currentOverride = getValues('powerTypeOverride');
+
+        if (!isForcedLinear) {
+            // Если длина <= 150, принудительно сбрасываем override
+            if (currentOverride || overrideType) {
+                console.log('📏 Длина <= 150 м, сброс override');
+                setOverrideType(false);
+                setValue('powerTypeOverride', false, { shouldValidate: true });
+                updateData({ powerTypeOverride: false });
+            }
+        } else {
+            // Если длина > 150, синхронизируем UI с данными формы
+            const formOverride = getValues('powerTypeOverride');
+            if (overrideType !== formOverride) {
+                setOverrideType(formOverride || false);
+            }
+        }
+    }, [length, isForcedLinear, setValue, updateData, getValues, overrideType]);
 
     // Определяем, активен ли селектор
     const isSelectDisabled = isForcedLinear && !overrideType;
 
-    // Определяем текущее значение для селектора
-    const selectValue = isForcedLinear && !overrideType ? POWER_TYPES.LINEAR : field.value;
+    // Действие при выборе типа питания в селекторе
+    const handlePowerTypeChange = (value: string) => {
+        setValue('powerType', value, { shouldValidate: true });
+        updateData({ powerType: value as any });
+    };
 
+    // Действие при клике на чекбокс
     const handleOverrideChange = (checked: boolean) => {
+        // Обновляем локальный state для UI
         setOverrideType(checked);
+        console.log('🔄 Чекбокс "принудительно":', checked ? 'ВКЛ' : 'ВЫКЛ');
 
-        // Если чекбокс снят и длина > 150, устанавливаем линейное питание
+        // Обновляем форму (react-hook-form)
+        setValue('powerTypeOverride', checked, {
+            shouldValidate: true, // Перевалидировать форму
+            shouldDirty: true, // Пометить как измененное
+        });
+
+        // Обновляем контекст (глобальное состояние)
+        updateData({ powerTypeOverride: checked });
+
+        // Если чекбокс выключен И длина превышает лимит
         if (!checked && isForcedLinear) {
-            field.onChange(POWER_TYPES.LINEAR);
+            console.log('🔄 Автоматический сброс к линейному питанию');
+
+            // Устанавливаем линейное питание
+            setValue('powerType', POWER_TYPES.LINEAR, { shouldValidate: true });
+            updateData({ powerType: POWER_TYPES.LINEAR });
         }
     };
 
     return (
         <div className="space-y-4">
+            {/* Информационные алерты */}
             {isForcedLinear && !overrideType && (
                 <Alert className="bg-amber-50 border-amber-200">
                     <Info className="h-4 w-4 text-amber-600" />
@@ -92,12 +131,10 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
                         </FieldLabel>
 
                         <Select
-                            value={selectValue}
-                            onValueChange={(value) => {
-                                if (!isSelectDisabled) {
-                                    field.onChange(value);
-                                }
-                            }}
+                            value={
+                                isForcedLinear && !overrideType ? POWER_TYPES.LINEAR : field.value
+                            }
+                            onValueChange={handlePowerTypeChange}
                             disabled={isSelectDisabled}
                         >
                             <SelectTrigger
@@ -134,17 +171,17 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
 
                         <FieldDescription>
                             {isForcedLinear && !overrideType ? (
-                                <div className="flex items-center text-amber-600">
+                                <span className="flex items-center text-amber-600">
                                     <Info className="h-4 w-4 mr-1" />
                                     Автоматически выбрано линейное питание из-за длины линии более
                                     150 м. Отметьте чекбокс выше, чтобы выбрать другой тип питания.
-                                </div>
+                                </span>
                             ) : isForcedLinear && overrideType ? (
-                                <div className="flex items-center text-blue-600">
+                                <span className="flex items-center text-blue-600">
                                     <Info className="h-4 w-4 mr-1" />
                                     Вы выбрали принудительное изменение типа питания. Убедитесь в
                                     корректности расчетов.
-                                </div>
+                                </span>
                             ) : (
                                 <>
                                     Концевое питание — питание подается с одного конца линии

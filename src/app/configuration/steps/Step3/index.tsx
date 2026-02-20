@@ -75,9 +75,7 @@ export default function Step3() {
 
         updateData(formData);
         goToNextStep();
-        console.log(formData);
-        console.log(data);
-        // alert('Конфигурация успешно сохранена!');
+        console.log('✅ Данные шага 3:', formData);
         console.log('Конфигурация успешно сохранена!');
     });
 

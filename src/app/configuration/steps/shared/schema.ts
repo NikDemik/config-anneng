@@ -51,6 +51,7 @@ export const configurationSchema = z
         powerType: z.enum([POWER_TYPES.END, POWER_TYPES.END2, POWER_TYPES.LINEAR], {
             required_error: VALIDATION_MESSAGES.POWER_TYPE_REQUIRED,
         }),
+        powerTypeOverride: z.boolean(),
 
         // Шаг 3
         totalConsumers: z.coerce
@@ -96,10 +97,12 @@ export const configurationSchema = z
     )
     .refine(
         (data) => {
-            if (data.length > MAX_LENGTH_FOR_END_POWER) {
-                return data.powerType === POWER_TYPES.LINEAR;
-            }
-            return true;
+            // Если длина <= 150 - всегда ок
+            if (data.length <= MAX_LENGTH_FOR_END_POWER) return true;
+
+            // Если длина > 150:
+            // Ок, если тип LINEAR ИЛИ включен override
+            return data.powerType === POWER_TYPES.LINEAR || data.powerTypeOverride === true;
         },
         {
             message: VALIDATION_MESSAGES.LENGTH_OVER_150,
@@ -116,6 +119,7 @@ export const step1Schema = configurationSchema.pick({
 export const step2Schema = configurationSchema.pick({
     voltage: true,
     powerType: true,
+    powerTypeOverride: true,
 });
 
 export const step3Schema = configurationSchema.pick({

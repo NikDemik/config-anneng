@@ -24,7 +24,7 @@ export default function Step1() {
 
     const onSubmit = form.handleSubmit((formData) => {
         updateData(formData);
-        console.log(formData);
+        console.log('✅ Данные шага 1:', formData);
         goToNextStep();
     });
 

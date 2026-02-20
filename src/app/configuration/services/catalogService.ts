@@ -161,6 +161,12 @@ class CatalogService {
             collectorGrips: accessories.filter((c) => c.typeId === 'collector_grip'),
         };
 
+        // Расчет количества подводов
+        function calcPowerfeedsCount(powerType: 'end' | 'end2' | 'linear'):number {
+            return powerType === 'linear' ? length <= 150 ? 1 : Math.floor(length / 150) + 1 : powerType === 'end' ? 1 : 2;            
+        }
+        const powerFeedsCount =calcPowerfeedsCount(powerType);
+
         // Расчет количества крышек концевых
         const endcapCount = powerType === 'end' ? 1 : 2;
 
@@ -186,7 +192,7 @@ class CatalogService {
             accessoriesCount: {
                 endCaps: endcapCount, // По 1 на линию
                 jointCovers: jointCoverCount,
-                powerFeeds: 1, // Как минимум 1
+                powerFeeds: powerFeedsCount,
                 fixedSuspensions: suspensionFixedCount,
                 slidingSuspensions: suspensionCount,
                 currentCollectors: currentCollectorCount,

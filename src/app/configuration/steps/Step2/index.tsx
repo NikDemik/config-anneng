@@ -1,9 +1,9 @@
 // src/app/configuration/steps/Step2/index.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { FieldGroup } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { step2Schema } from '../shared/schema';
@@ -15,13 +15,13 @@ import PowerTypeField from './fields/PowerTypeField';
 
 export default function Step2() {
     const { data, updateData, goToPrevStep, goToNextStep } = useConfiguration();
-    const isEffectRun = useRef(false); // Предотвращаем множественные обновления
 
     const form = useForm<ConfigurationData>({
         resolver: zodResolver(step2Schema as any),
         defaultValues: {
             voltage: data.voltage,
             powerType: data.powerType,
+            powerTypeOverride: data.powerTypeOverride || false,
         },
         mode: 'onChange',
     });
@@ -29,75 +29,66 @@ export default function Step2() {
     // Получаем длину линии из контекста для проверки ограничений
     const length = data.length;
 
+    // Синхронизация данных формы с контекстом при изменении
+    useEffect(() => {
+        const subscription = form.watch((value) => {
+            if (value.powerType || value.powerTypeOverride !== undefined) {
+                updateData({
+                    powerType: value.powerType as any,
+                    powerTypeOverride: value.powerTypeOverride,
+                });
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [form, updateData]);
+
     const onSubmit = form.handleSubmit((formData) => {
         updateData(formData);
-        // Переход на следующий шаг будет через навигацию в layout
     });
 
     const canProceed = form.formState.isValid;
 
-    useEffect(() => {
-        const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
-
-        if (isForcedLinear) {
-            // Проверяем, нужно ли обновлять (чтобы избежать бесконечного цикла)
-            const currentPowerType = form.getValues('powerType');
-
-            if (currentPowerType !== POWER_TYPES.LINEAR && !isEffectRun.current) {
-                isEffectRun.current = true;
-                // 1. Обновляем форму
-                form.setValue('powerType', POWER_TYPES.LINEAR, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                });
-
-                // 2. Обновляем глобальный контекст
-                updateData({ powerType: POWER_TYPES.LINEAR });
-            }
-        } else {
-            isEffectRun.current = false;
-        }
-    }, [length, form, updateData]); // Убираем лишние зависимости
-
     return (
-        <form onSubmit={onSubmit} className="space-y-6">
-            <FieldGroup>
-                <VoltageField control={form.control} />
-                <PowerTypeField control={form.control} length={length} />
-            </FieldGroup>
+        <FormProvider {...form}>
+            <form onSubmit={onSubmit} className="space-y-6">
+                <FieldGroup>
+                    <VoltageField control={form.control} />
+                    <PowerTypeField control={form.control} length={length} />
+                </FieldGroup>
 
-            <div className="flex justify-between">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                        // Сохраняем данные перед переходом
-                        form.handleSubmit((formData) => {
-                            updateData(formData);
-                            goToPrevStep();
-                        })();
-                    }}
-                >
-                    Назад: Основные параметры
-                </Button>
+                <div className="flex justify-between">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                            // Сохраняем данные перед переходом
+                            form.handleSubmit((formData) => {
+                                updateData(formData);
+                                goToPrevStep();
+                            })();
+                        }}
+                    >
+                        Назад: Основные параметры
+                    </Button>
 
-                <Button
-                    type="button"
-                    onClick={() => {
-                        // Сохраняем данные перед переходом
-                        form.handleSubmit((formData) => {
-                            updateData(formData);
-                            console.log(formData); //вывод данных в консоль
-                            goToNextStep();
-                        })();
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    disabled={!canProceed}
-                >
-                    Далее: Потребители
-                    {!canProceed && ' (заполните все поля)'}
-                </Button>
-            </div>
-        </form>
+                    <Button
+                        type="button"
+                        onClick={() => {
+                            // Сохраняем данные перед переходом
+                            form.handleSubmit((formData) => {
+                                updateData(formData);
+                                console.log('✅ Данные шага 2:', formData); //вывод данных в консоль
+                                goToNextStep();
+                            })();
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700"
+                        disabled={!canProceed}
+                    >
+                        Далее: Потребители
+                        {!canProceed && ' (заполните все поля)'}
+                    </Button>
+                </div>
+            </form>
+        </FormProvider>
     );
 }
