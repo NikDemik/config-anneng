@@ -76,7 +76,6 @@ export default function Step3() {
         updateData(formData);
         goToNextStep();
         console.log('✅ Данные шага 3:', formData);
-        console.log('Конфигурация успешно сохранена!');
     });
 
     const canSubmit = form.formState.isValid;

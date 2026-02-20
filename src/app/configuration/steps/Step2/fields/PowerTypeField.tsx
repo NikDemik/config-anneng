@@ -29,7 +29,7 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
     const { setValue, getValues } = useFormContext();
 
     // Используем ref для отслеживания первого рендера
-    const isMounted = useRef(false);
+    // const isMounted = useRef(false);
 
     const isForcedLinear = length > MAX_LENGTH_FOR_END_POWER;
 
@@ -41,10 +41,10 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
     // Синхронизация с формой при изменении длины
     useEffect(() => {
         // Пропускаем первый рендер
-        if (!isMounted.current) {
-            isMounted.current = true;
-            return;
-        }
+        // if (!isMounted.current) {
+        //     isMounted.current = true;
+        //     return;
+        // }
         const currentOverride = getValues('powerTypeOverride');
 
         if (!isForcedLinear) {
@@ -131,9 +131,7 @@ export default function PowerTypeField({ control, length }: PowerTypeFieldProps)
                         </FieldLabel>
 
                         <Select
-                            value={
-                                isForcedLinear && !overrideType ? POWER_TYPES.LINEAR : field.value
-                            }
+                            value={isSelectDisabled ? POWER_TYPES.LINEAR : field.value}
                             onValueChange={handlePowerTypeChange}
                             disabled={isSelectDisabled}
                         >

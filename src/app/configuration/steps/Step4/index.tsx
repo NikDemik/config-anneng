@@ -79,16 +79,6 @@ export default function Step4() {
         validationResults.powerMismatch() &&
         validationResults.lengthAndPowerType();
 
-    // Расчетные параметры
-    // const calculateParameters = () => {
-    //     // Пример расчетов - можно расширить
-    //     const totalCurrent = calculateTotalCurrent(data); // Для трехфазной
-
-    //     return {
-    //         totalCurrent: totalCurrent.toFixed(2),
-    //     };
-    // };
-
     const calculated = performCompleteCalculations(data);
 
     const handleConfirm = () => {
@@ -212,14 +202,6 @@ export default function Step4() {
         }
         return 'Не выбрано';
     };
-
-    console.log('Debug:', {
-        length: data.length,
-        powerType: data.powerType,
-        powerTypeOverride: data.powerTypeOverride,
-        isValid: validationResults.lengthAndPowerType(),
-        condition: data.length > 150 && data.powerType !== 'linear' && data.powerTypeOverride,
-    });
 
     return (
         <div className="space-y-6">

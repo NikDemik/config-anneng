@@ -16,6 +16,19 @@ import PowerTypeField from './fields/PowerTypeField';
 export default function Step2() {
     const { data, updateData, goToPrevStep, goToNextStep } = useConfiguration();
 
+    // Определяем, нужно ли принудительно линейное питание
+    const isForcedLinear = data.length > MAX_LENGTH_FOR_END_POWER;
+
+    // Определяем правильный тип питания для формы
+    const getDefaultPowerType = () => {
+        if (isForcedLinear) {
+            // Если длина > 150, то по умолчанию LINEAR
+            return POWER_TYPES.LINEAR;
+        }
+        // Иначе берем из контекста
+        return data.powerType;
+    };
+
     const form = useForm<ConfigurationData>({
         resolver: zodResolver(step2Schema as any),
         defaultValues: {
@@ -25,6 +38,39 @@ export default function Step2() {
         },
         mode: 'onChange',
     });
+
+    // Эффект для обновления формы при изменении длины
+    useEffect(() => {
+        const newIsForcedLinear = data.length > MAX_LENGTH_FOR_END_POWER;
+        const currentPowerType = form.getValues('powerType');
+        const currentOverride = form.getValues('powerTypeOverride');
+
+        if (newIsForcedLinear) {
+            // Если длина > 150
+            if (currentPowerType !== POWER_TYPES.LINEAR && !currentOverride) {
+                // Если нет override и тип не линейный - меняем на LINEAR
+                console.log('📏 Длина > 150 м, устанавливаем LINEAR');
+                form.setValue('powerType', POWER_TYPES.LINEAR, {
+                    shouldValidate: true,
+                });
+                form.setValue('powerTypeOverride', false);
+
+                // Обновляем контекст
+                updateData({
+                    powerType: POWER_TYPES.LINEAR,
+                    powerTypeOverride: false,
+                });
+            }
+        } else {
+            // Если длина <= 150, но в форме LINEAR - меняем на END (или сохраняем из контекста)
+            if (currentPowerType === POWER_TYPES.LINEAR && data.powerType !== POWER_TYPES.LINEAR) {
+                console.log('📏 Длина <= 150 м, восстанавливаем тип из контекста');
+                form.setValue('powerType', data.powerType, {
+                    shouldValidate: true,
+                });
+            }
+        }
+    }, [data.length, form, updateData]);
 
     // Получаем длину линии из контекста для проверки ограничений
     const length = data.length;
