@@ -49,7 +49,7 @@ export default function Step5() {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Назад
                     </Button>
-                    <Button onClick={buildKit}>Повторить попытку</Button>
+                    <Button onClick={resetData}>Изменить данные</Button>
                 </div>
             </div>
         );

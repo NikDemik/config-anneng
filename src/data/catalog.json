@@ -46,7 +46,10 @@
         { "id": "section", "name": "Секция", "required": true },
         { "id": "end_cap", "name": "Крышка концевая", "required": true },
         { "id": "joint_cover", "name": "Крышка стыковая", "required": true },
+        { "id": "connect_terminal", "name": "Клемма соединительная", "required": true },
         { "id": "power_feed", "name": "Подвод питания", "required": true },
+        { "id": "power_terminal", "name": "Клемма ввода питания", "required": true },
+        { "id": "power_feed_linear", "name": "Подвод питания линейный", "required": true },
         { "id": "suspension_fixed", "name": "Подвес фиксирующий", "required": true },
         { "id": "suspension_sliding", "name": "Подвес скользящий", "required": true },
         { "id": "current_collector", "name": "Токосъемник", "required": true },
@@ -70,7 +73,7 @@
         {
             "id": "560014-A",
             "name": "Рельсовый проводник Anneng 50A HFP56-4-10/50",
-            "description": "Рельсовый проводник Anneng 35A 50A HFP56-4-10/50",
+            "description": "Рельсовый проводник Anneng 50A HFP56-4-10/50",
             "imageUrl": ["/image/products/component.jpg"],
             "price": 3646,
             "type": "Секция",
@@ -94,8 +97,100 @@
             "seriesId": "hfp56"
         },
         {
+            "id": "561514-A",
+            "name": "Рельсовый проводник Anneng 80A HFP56-4-15/80",
+            "description": "Рельсовый проводник Anneng 80A HFP56-4-15/80",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 80, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "562024",
+            "name": "Рельсовый проводник Anneng 100A HFP56-4-20/100",
+            "description": "Рельсовый проводник Anneng 100A HFP56-4-20/100",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 100, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "562524",
+            "name": "Рельсовый проводник Anneng 120A HFP56-4-25/120",
+            "description": "Рельсовый проводник Anneng 120A HFP56-4-25/120",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 120, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "563524",
+            "name": "Рельсовый проводник Anneng 140A HFP56-4-35/140",
+            "description": "Рельсовый проводник Anneng 140A HFP56-4-35/140",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 140, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "565024",
+            "name": "Рельсовый проводник Anneng 170A HFP56-4-50/170",
+            "description": "Рельсовый проводник Anneng 170A HFP56-4-50/170",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 170, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "567024",
+            "name": "Рельсовый проводник Anneng 210A HFP56-4-70/210",
+            "description": "Рельсовый проводник Anneng 210A HFP56-4-70/210",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 210, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+        {
+            "id": "568034",
+            "name": "Рельсовый проводник Anneng 240A HFP56-4-80/240",
+            "description": "Рельсовый проводник Anneng 240A HFP56-4-80/240",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 4040,
+            "type": "Секция",
+            "typeId": "section",
+            "specs": { "amperage": 240, "poles": 4, "lenght": 4 },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56"
+        },
+
+        {
             "id": "563401",
-            "name": "Крышка стыковая Anneng 56LJ-45",
+            "name": "Крышка стыковая Anneng 56LJ-45 (35A - 100A)",
             "description": "Крышка стыковая Anneng HFP56 56LJ-45 (35A - 100A)",
             "imageUrl": ["/image/products/component.jpg"],
             "price": 585,
@@ -107,12 +202,98 @@
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 35, "max": 100 }
+                "amperageRange": { "min": 0, "max": 100 }
             }
         },
         {
+            "id": "563406",
+            "name": "Крышка стыковая Anneng 56LJ-6 (120A - 210A)",
+            "description": "Крышка стыковая Anneng HFP56 56LJ-6 (120A - 210A), 563406",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 585,
+            "type": "Крышка стыковая",
+            "typeId": "joint_cover",
+            "specs": { "amperage": { "min": 120, "max": 210 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 100, "max": 210 }
+            }
+        },
+        {
+            "id": "563406-02",
+            "name": "Крышка стыковая Anneng 56LJ-5-2 (240A)",
+            "description": "Крышка стыковая Anneng HFP56 56LJ-5-2 (240A)",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 585,
+            "type": "Крышка стыковая",
+            "typeId": "joint_cover",
+            "specs": { "amperage": { "min": 210, "max": 240 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 210, "max": 240 }
+            }
+        },
+        {
+            "id": "560003",
+            "name": "Клемма соединительная Anneng для HFP56 120А-140А 56JT-140A",
+            "description": "Клемма соединительная Anneng для HFP56 120А-140А 56JT-140A 560003",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 585,
+            "type": "Клемма соединительная",
+            "typeId": "connect_terminal",
+            "specs": { "amperage": { "min": 120, "max": 140 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 100, "max": 140 }
+            }
+        },
+        {
+            "id": "560006",
+            "name": "Клемма соединительная Anneng для HFP56 170А-210А 56JT-210A",
+            "description": "Клемма соединительная Anneng для HFP56 170А-210А 56JT-210A, 560006",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 585,
+            "type": "Клемма соединительная",
+            "typeId": "connect_terminal",
+            "specs": { "amperage": { "min": 170, "max": 210 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 140, "max": 210 }
+            }
+        },
+        {
+            "id": "560008",
+            "name": "Клемма соединительная Anneng для HFP56 240А 56JT-240A",
+            "description": "Клемма соединительная Anneng для HFP56 240А 56JT-240A, 560008",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 585,
+            "type": "Клемма соединительная",
+            "typeId": "connect_terminal",
+            "specs": { "amperage": { "min": 210, "max": 240 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 210, "max": 240 }
+            }
+        },
+
+        {
             "id": "563912",
-            "name": "Подвес скользящий Anneng 56DJ-4",
+            "name": "Подвес скользящий Anneng 56DJ-4 (35A - 100A)",
             "description": "Подвес скользящий Anneng HFP56 56DJ-4 (35A - 100A)",
             "imageUrl": ["/image/products/component.jpg"],
             "price": 355,
@@ -124,13 +305,31 @@
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 35, "max": 100 }
+                "amperageRange": { "min": 0, "max": 100 }
+            },
+            "quantityPerMeter": 3
+        },
+        {
+            "id": "563911",
+            "name": "Подвес скользящий Anneng для HFP56 (120A-240A) 56DJ-2",
+            "description": "Подвес скользящий Anneng для HFP56 (120A-240A) 56DJ-2, 563911",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 355,
+            "type": "Подвес скользящий",
+            "typeId": "suspension_sliding",
+            "specs": { "amperage": { "min": 120, "max": 240 }, "material": "металл" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 100, "max": 240 }
             },
             "quantityPerMeter": 3
         },
         {
             "id": "563902",
-            "name": "Подвес фиксирующий  Anneng 56DJ-3",
+            "name": "Подвес фиксирующий Anneng 56DJ-3 (35A - 100A)",
             "description": "Подвес фиксирующий Anneng HFP56 56DJ-3 (35A - 100A)",
             "imageUrl": ["/image/products/component.jpg"],
             "price": 466,
@@ -142,10 +341,27 @@
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 35, "max": 100 }
-            },
-            "quantityPerMeter": 1
+                "amperageRange": { "min": 0, "max": 100 }
+            }
         },
+        {
+            "id": "563901",
+            "name": "Подвес фиксирующий Anneng 56DJ-1 (120A - 240A)",
+            "description": "Подвес фиксирующий Anneng HFP56 56DJ-1 (120A - 240A)",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 466,
+            "type": "Подвес фиксирующий",
+            "typeId": "suspension_fixed",
+            "specs": { "amperage": { "min": 120, "max": 240 }, "material": "металл" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 100, "max": 240 }
+            }
+        },
+
         {
             "id": "563701",
             "name": "Крышка концевая Anneng 56DM",
@@ -160,58 +376,282 @@
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 35, "max": 240 }
+                "amperageRange": { "min": 0, "max": 240 }
             }
         },
         {
             "id": "564685",
-            "name": "Концевой подвод питания Anneng 56DG",
-            "description": "Концевой подвод питания Anneng 56DG для HFP56",
+            "name": "Концевой подвод питания Anneng HFP56 (без клемм) 56DG",
+            "description": "Концевой подвод питания Anneng HFP56 (без клемм) 56DG, 564685",
             "imageUrl": ["/image/products/component.jpg"],
             "price": 510,
             "type": "Подвод питания",
             "typeId": "power_feed",
-            "specs": { "amperage": { "min": 35, "max": 100 }, "material": "пластик" },
+            "specs": { "amperage": { "min": 35, "max": 210 }, "material": "пластик" },
             "categoryId": "components",
             "brandId": "anneng",
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 35, "max": 100 }
+                "amperageRange": { "min": 0, "max": 210 }
             }
         },
         {
-            "id": "563125",
-            "name": "Токосъёмник Anneng 56JD-4/25",
-            "description": "Токосъёмник Anneng 56JD-4/25 для HFP56",
+            "id": "564685-02",
+            "name": "Концевой подвод питания Anneng HFP56 (без клемм) 240А 56DG",
+            "description": "Концевой подвод питания Anneng HFP56 (без клемм) 240А 56DG, 564685-02",
             "imageUrl": ["/image/products/component.jpg"],
-            "price": 6300,
-            "type": "Токосъемник",
-            "typeId": "current_collector",
-            "specs": { "amperage": 25, "material": "пластик" },
+            "price": 510,
+            "type": "Подвод питания",
+            "typeId": "power_feed",
+            "specs": { "amperage": { "min": 210, "max": 240 }, "material": "пластик" },
             "categoryId": "components",
             "brandId": "anneng",
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 25, "max": 240 }
+                "amperageRange": { "min": 210, "max": 240 }
             }
         },
+        {
+            "id": "560009",
+            "name": "Клемма ввода питания торцевого (латунь) Anneng для HFP56 (120A-210A) 56EJ-1",
+            "description": "Клемма ввода питания торцевого (латунь) Anneng для HFP56 (120A-210A) 56EJ-1, 560009",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Клемма ввода питания",
+            "typeId": "power_terminal",
+            "specs": { "amperage": { "min": 120, "max": 210 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 100, "max": 210 }
+            }
+        },
+        {
+            "id": "560099",
+            "name": "Клемма ввода питания торцевого (латунь) Anneng для HFP56 240A 56EJ-2",
+            "description": "Клемма ввода питания торцевого (латунь) Anneng для HFP56 240A 56EJ-2, 560099",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Клемма ввода питания",
+            "typeId": "power_terminal",
+            "specs": { "amperage": { "min": 210, "max": 240 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 210, "max": 240 }
+            }
+        },
+
+        {
+            "id": "564699-14",
+            "name": "Линейный подвод питания Anneng для HFP56 35А-80А (L-0,5м) 56ZG-500-4/80A",
+            "description": "Линейный подвод питания Anneng для HFP56 35А-80А (L-0,5м) 56ZG-500-4/80A 564699-14",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 35, "max": 80 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 0, "max": 80 }
+            }
+        },
+        {
+            "id": "564699-15",
+            "name": "Линейный подвод питания Anneng для HFP56 100А (L-0,5м) 56ZG-500-4/100A",
+            "description": "Линейный подвод питания Anneng для HFP56 100А (L-0,5м) 56ZG-500-4/100A, 564699-15",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 80, "max": 100 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 80, "max": 100 }
+            }
+        },
+        {
+            "id": "564699-26",
+            "name": "Линейный подвод питания Anneng для HFP56 120А (L-0,5м) 56ZG-500-4/120A",
+            "description": "Линейный подвод питания Anneng для HFP56 120А (L-0,5м) 56ZG-500-4/120A, 564699-26",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 100, "max": 120 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 100, "max": 120 }
+            }
+        },
+        {
+            "id": "564699-27",
+            "name": "Линейный подвод питания Anneng для HFP56 140А (L-0,5м) 56ZG-500-4/140A",
+            "description": "Линейный подвод питания Anneng для HFP56 140А (L-0,5м) 56ZG-500-4/140A, 564699-27",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 120, "max": 140 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 120, "max": 140 }
+            }
+        },
+        {
+            "id": "564699-28",
+            "name": "Линейный подвод питания Anneng для HFP56 170А (L-0,5м) 56ZG-500-4/170A",
+            "description": "Линейный подвод питания Anneng для HFP56 170А (L-0,5м) 56ZG-500-4/170A, 564699-28",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 140, "max": 170 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 140, "max": 170 }
+            }
+        },
+        {
+            "id": "564699-29",
+            "name": "Линейный подвод питания Anneng для HFP56 210А (L-0,5м) 56ZG-500-4/210A",
+            "description": "Линейный подвод питания Anneng для HFP56 210А (L-0,5м) 56ZG-500-4/210A, 564699-29",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 170, "max": 210 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 170, "max": 210 }
+            }
+        },
+        {
+            "id": "564699-36",
+            "name": "Линейный подвод питания Anneng для HFP56 240А (длинна L-1м) 56ZG-1000-4/240A",
+            "description": "Линейный подвод питания Anneng для HFP56 240А (длинна L-1м) 56ZG-1000-4/240A, 564699-36",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 510,
+            "type": "Подвод питания линейный",
+            "typeId": "power_feed_linear",
+            "specs": { "amperage": { "min": 210, "max": 240 }, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 210, "max": 240 }
+            }
+        },
+
         {
             "id": "563140",
-            "name": "Токосъёмник Anneng 56JD-4/40",
-            "description": "Токосъёмник Anneng 56JD-4/40 для HFP56",
+            "name": "Токосъёмник Anneng для HFP56 40А (с кабелем L-1м), 56JD-4/40",
+            "description": "Токосъёмник Anneng для HFP56 40А (с кабелем L-1м), 56JD-4/40, 563140",
             "imageUrl": ["/image/products/component.jpg"],
             "price": 6900,
             "type": "Токосъемник",
             "typeId": "current_collector",
-            "specs": { "amperage": 40, "material": "пластик" },
+            "specs": { "amperage": 40, "poles": 4, "material": "пластик" },
             "categoryId": "components",
             "brandId": "anneng",
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 25, "max": 240 }
+                "amperageRange": { "min": 0, "max": 240 }
+            }
+        },
+        {
+            "id": "563125",
+            "name": "Токосъёмник Anneng для HFP56 25А (с кабелем L-1м), 56JD-4/25",
+            "description": "Токосъёмник Anneng для HFP56 25А (с кабелем L-1м), 56JD-4/25, 563125",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 6300,
+            "type": "Токосъемник",
+            "typeId": "current_collector",
+            "specs": { "amperage": 25, "poles": 4, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 0, "max": 240 }
+            }
+        },
+        {
+            "id": "563160",
+            "name": "Токосъёмник Anneng для HFP56 60А сдвоенный (с кабелем L-1м), 56JD-4/60",
+            "description": "Токосъёмник Anneng для HFP56 60А сдвоенный (с кабелем L-1м), 56JD-4/60, 563160",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 6900,
+            "type": "Токосъемник",
+            "typeId": "current_collector",
+            "specs": { "amperage": 60, "poles": 4, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 0, "max": 240 }
+            }
+        },
+        {
+            "id": "563180",
+            "name": "Токосъёмник Anneng для HFP56 80А (с кабелем L-1м), 56JD-4/80",
+            "description": "Токосъёмник Anneng для HFP56 80А (с кабелем L-1м), 56JD-4/80, 563180",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 6900,
+            "type": "Токосъемник",
+            "typeId": "current_collector",
+            "specs": { "amperage": 80, "poles": 4, "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 0, "max": 240 }
+            }
+        },
+
+        {
+            "id": "565055",
+            "name": "Водило токосъемника Anneng  56BC/55",
+            "description": "Водило токосъемника Anneng 56BC/55 для HFP52/HFP56",
+            "imageUrl": ["/image/products/component.jpg"],
+            "price": 462,
+            "type": "Захват",
+            "typeId": "collector_grip",
+            "specs": { "material": "пластик" },
+            "categoryId": "components",
+            "brandId": "anneng",
+            "seriesId": "hfp56",
+            "compatibility": {
+                "seriesIds": ["hfp56"],
+                "amperageRange": { "min": 0, "max": 240 }
             }
         },
         {
@@ -228,7 +668,7 @@
             "seriesId": "hfp56",
             "compatibility": {
                 "seriesIds": ["hfp56"],
-                "amperageRange": { "min": 25, "max": 240 }
+                "amperageRange": { "min": 0, "max": 240 }
             }
         }
     ],

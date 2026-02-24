@@ -350,33 +350,6 @@ export default function Step4() {
 
                                             return <Badge variant="default">✓ Корректно</Badge>;
                                         })()}
-
-                                        {/* <Badge
-                                            variant={
-                                                validationResults.lengthAndPowerType()
-                                                    ? data.length > 150 &&
-                                                      data.powerType !== 'linear' &&
-                                                      data.powerTypeOverride
-                                                        ? 'warning'
-                                                        : 'default'
-                                                    : 'destructive'
-                                            }
-                                            className={
-                                                data.length > 150 &&
-                                                data.powerType !== 'linear' &&
-                                                data.powerTypeOverride
-                                                    ? 'bg-amber-100 text-amber-800 border-amber-300'
-                                                    : ''
-                                            }
-                                        >
-                                            {validationResults.lengthAndPowerType()
-                                                ? data.length > 150 &&
-                                                  data.powerType !== 'linear' &&
-                                                  data.powerTypeOverride
-                                                    ? '⚠️ Принудительный выбор'
-                                                    : '✓ Корректно'
-                                                : 'Ошибка'}
-                                        </Badge> */}
                                     </div>
                                 </div>
 
