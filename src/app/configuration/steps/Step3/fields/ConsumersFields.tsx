@@ -86,7 +86,7 @@ export default function ConsumersFields({
                     name="showIndividualPowers"
                     control={control}
                     render={({ field }) => (
-                        <Field className="flex items-center gap-3 pt-4">
+                        <div className="flex justify-between items-start space-x-2 mt-2">
                             <Checkbox
                                 id="showIndividualPowers"
                                 checked={field.value}
@@ -99,15 +99,16 @@ export default function ConsumersFields({
                             <div className="flex-1">
                                 <FieldLabel
                                     htmlFor="showIndividualPowers"
-                                    className="!mb-1 cursor-pointer"
+                                    className="mb-1! cursor-pointer"
                                 >
                                     Указать мощность для каждого потребителя отдельно
                                 </FieldLabel>
-                                <FieldDescription className="!mt-0">
-                                    Активируйте, если знаете точную мощность каждого потребителя
+                                <FieldDescription className="mt-0!">
+                                    Активируйте, если мощность каждого потребителя разная, и вы
+                                    знаете точную мощность каждого потребителя
                                 </FieldDescription>
                             </div>
-                        </Field>
+                        </div>
                     )}
                 />
             )}
@@ -153,13 +154,12 @@ export default function ConsumersFields({
                                 Укажите мощность для каждого из {totalConsumers} потребителей
                             </FieldDescription>
                         </div>
-                        {onAddConsumer && (
+                        {onAddConsumer && fields.length < 12 && (
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={onAddConsumer}
-                                disabled={totalConsumers >= 20}
                             >
                                 <Plus className="h-4 w-4 mr-1" />
                                 Добавить

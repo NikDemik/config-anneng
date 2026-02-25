@@ -2,6 +2,9 @@ export type PowerType = 'end' | 'end2' | 'linear';
 
 export interface Consumer {
     power: number;
+    // Можно добавить другие параметры потребителя
+    name?: string;
+    type?: string;
 }
 
 // Добавляем расчетные параметры

@@ -62,6 +62,27 @@ export interface ConfigurationResult {
     };
 }
 
+// Интерфейс для потребителя с расчетными параметрами
+export interface ConsumerWithCalculation {
+    power: number;           // Мощность в кВт
+    current: number;         // Ток в А (рассчитанный)
+    requiredCollectors: number; // Необходимое количество токосъемников
+    selectedCollectors: Component[]; // Выбранные токосъемники
+    totalCollectorAmperage: number; // Суммарный ток всех токосъемников
+}
+
+// Результат подбора токосъемников для индивидуальных потребителей
+export interface IndividualCollectorSelection {
+    consumers: ConsumerWithCalculation[]; // Массив потребителей с расчетами
+    totalCollectors: number; // Общее количество токосъемников
+    totalPrice: number; // Общая стоимость
+    collectorsByType: Record<string, { // Группировка по типу/номиналу
+        count: number;
+        price: number;
+        component: Component;
+    }>;
+}
+
 class CatalogService {
     private data: typeof catalogData;
 
@@ -181,13 +202,14 @@ class CatalogService {
                 bestAmperage = amperage;
             }
             // Если количество одинаковое, выбираем больший номинал (меньше токосъемников всего)
-            else if (collectorsNeeded === minCollectorsPerConsumer && amperage > bestAmperage) {
+            else if (collectorsNeeded === minCollectorsPerConsumer && amperage < bestAmperage) {
                 bestAmperage = amperage;
             }
         }
 
         return bestAmperage;
     }
+    
 
     // Поиск комплектующих по серии и совместимости
     findAccessories(seriesId: string, amperage: number, typeIds?: string[]): Component[] {
@@ -277,6 +299,7 @@ class CatalogService {
             currentCollectors: collectorSelection.collectors,
             collectorGrips: accessories.filter((c) => c.typeId === 'collector_grip'),
         };
+        console.log(grouped);
 
         // Расчет количества крышек концевых
         const endcapCount = powerType === 'end' ? 1 : powerType === 'end2' ? 0 : 2;
@@ -329,7 +352,10 @@ class CatalogService {
                 : Math.ceil(length / 4) * 3 - suspensionFixedCount;
 
         // Расчет количества токосъемников и захватов
-        const currentCollectorCount = totalConsumers; // По количеству потребителей
+        const currentCollectorCount = collectorSelection.totalCollectors;
+
+        // Расчет количества захватов
+        const collectorGripCount = collectorSelection.totalCollectors;
 
         // Расчет стоимости
         const totals = {
@@ -345,7 +371,7 @@ class CatalogService {
                 fixedSuspensions: suspensionFixedCount,
                 slidingSuspensions: suspensionCount,
                 currentCollectors: currentCollectorCount,
-                collectorGrips: currentCollectorCount,
+                collectorGrips: collectorGripCount,
             },
             accessoriesPrice: {
                 endCaps: (grouped.endCaps[0]?.price || 0) * endcapCount,
@@ -358,7 +384,7 @@ class CatalogService {
                 slidingSuspensions: (grouped.slidingSuspensions[0]?.price || 0) * suspensionCount,
                 currentCollectors:
                     (grouped.currentCollectors[0]?.price || 0) * currentCollectorCount,
-                collectorGrips: (grouped.collectorGrips[0]?.price || 0) * currentCollectorCount,
+                collectorGrips: (grouped.collectorGrips[0]?.price || 0) * collectorGripCount,
             },
             totalPrice: 0,
         };
@@ -381,19 +407,21 @@ class CatalogService {
     }
 
     // Вспомогательная функция для тестирования подбора токосъемников
-    testCollectorSelection(lineAmperage: number, consumers: number) {
-        const result = this.selectCurrentCollectors(lineAmperage, consumers);
+    testCollectorSelection(requiredAmperage: number, consumers: number) {
+        const result = this.selectCurrentCollectors(requiredAmperage, consumers);
         console.log(`
         Тест подбора токосъемников:
-        Ток линии: ${lineAmperage}А
+        Ток линии: ${requiredAmperage}А
         Потребителей: ${consumers}
-        Ток на потребителя: ${(lineAmperage / consumers).toFixed(1)}А
+        Ток на потребителя: ${(requiredAmperage / consumers).toFixed(1)}А
         Выбран номинал: ${result.perCollectorAmperage}А
         Токосъемников на потребителя: ${result.collectorsPerConsumer}
         Всего токосъемников: ${result.totalCollectors}
         `);
         return result;
     }
+
+    
 }
 
 export const catalogService = new CatalogService();

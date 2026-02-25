@@ -1,6 +1,7 @@
+// src/app/configuration/steps/Step3/hooks/useConsumersLogic.ts
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { ConfigurationData } from '../../shared/types';
 
@@ -13,6 +14,7 @@ interface UseConsumersLogicProps {
 
 export function useConsumersLogic({ form, fields, append, remove }: UseConsumersLogicProps) {
     const { watch, setValue } = form;
+    const isUpdatingRef = useRef(false);
 
     const watchTotalConsumers = watch('totalConsumers');
     const watchShowIndividualPowers = watch('showIndividualPowers');
@@ -20,54 +22,84 @@ export function useConsumersLogic({ form, fields, append, remove }: UseConsumers
 
     // Синхронизация полей при изменении количества потребителей или режима
     useEffect(() => {
-        if (watchShowIndividualPowers && watchTotalConsumers > 1) {
-            const currentCount = fields.length;
-            const targetCount = watchTotalConsumers;
+        // Защита от рекурсивных обновлений
+        if (isUpdatingRef.current) return;
 
-            if (currentCount < targetCount) {
-                // Нужно добавить поля
-                const powerPerConsumer = watchTotalPower > 0 ? watchTotalPower / targetCount : 0;
-                for (let i = currentCount; i < targetCount; i++) {
-                    append({ power: powerPerConsumer });
-                }
-            } else if (currentCount > targetCount) {
-                // Нужно удалить лишние поля
-                for (let i = currentCount - 1; i >= targetCount; i--) {
+        if (!watchShowIndividualPowers || watchTotalConsumers <= 1) {
+            // Если режим выключен или потребителей <= 1, очищаем массив
+            if (fields.length > 0) {
+                isUpdatingRef.current = true;
+                for (let i = fields.length - 1; i >= 0; i--) {
                     remove(i);
                 }
+                isUpdatingRef.current = false;
             }
+            return;
+        }
 
-            // Перераспределяем мощность
-            if (watchTotalPower > 0) {
-                const powerPerConsumer = watchTotalPower / targetCount;
-                fields.forEach((_, index) => {
-                    setValue(`individualPowers.${index}.power`, powerPerConsumer);
-                });
+        const currentLength = fields.length;
+
+        if (watchTotalConsumers > currentLength) {
+            // Добавляем новых потребителей
+            isUpdatingRef.current = true;
+            const powerPerConsumer =
+                watchTotalPower > 0 ? watchTotalPower / watchTotalConsumers : 0;
+
+            for (let i = currentLength; i < watchTotalConsumers; i++) {
+                append({ power: powerPerConsumer });
             }
-        } else if (!watchShowIndividualPowers && fields.length > 0) {
-            // Если режим выключен, очищаем все поля
-            while (fields.length > 0) {
-                remove(fields.length - 1);
+            isUpdatingRef.current = false;
+        } else if (watchTotalConsumers < currentLength) {
+            // Удаляем лишних потребителей
+            isUpdatingRef.current = true;
+            for (let i = currentLength - 1; i >= watchTotalConsumers; i--) {
+                remove(i);
             }
+            isUpdatingRef.current = false;
         }
     }, [watchShowIndividualPowers, watchTotalConsumers]);
 
-    // Перераспределение мощности при изменении общей мощности
+    // Отдельный эффект только для перераспределения мощности
     useEffect(() => {
+        // Защита от рекурсивных обновлений
+        if (isUpdatingRef.current) return;
+
         if (watchShowIndividualPowers && watchTotalConsumers > 1 && watchTotalPower > 0) {
-            const powerPerConsumer = watchTotalPower / watchTotalConsumers;
-            fields.forEach((_, index) => {
-                setValue(`individualPowers.${index}.power`, powerPerConsumer);
-            });
+            // Проверяем, нужно ли перераспределять
+            const currentSum = fields.reduce((sum, field) => sum + (field.power || 0), 0);
+            const expectedPerConsumer = watchTotalPower / watchTotalConsumers;
+            const needsRedistribution = Math.abs(currentSum - watchTotalPower) > 0.1;
+
+            if (needsRedistribution && fields.length === watchTotalConsumers) {
+                isUpdatingRef.current = true;
+                fields.forEach((_, index) => {
+                    setValue(`individualPowers.${index}.power`, expectedPerConsumer, {
+                        shouldValidate: true,
+                    });
+                });
+                isUpdatingRef.current = false;
+            }
         }
-    }, [watchTotalPower]);
+    }, [watchTotalPower, watchTotalConsumers, watchShowIndividualPowers]);
 
     const handleToggleIndividualPowers = (checked: boolean) => {
         setValue('showIndividualPowers', checked);
+
+        // Если включаем режим и есть потребители, инициализируем массив
+        if (checked && watchTotalConsumers > 1 && fields.length === 0) {
+            const powerPerConsumer =
+                watchTotalPower > 0 ? watchTotalPower / watchTotalConsumers : 0;
+
+            isUpdatingRef.current = true;
+            for (let i = 0; i < watchTotalConsumers; i++) {
+                append({ power: powerPerConsumer });
+            }
+            isUpdatingRef.current = false;
+        }
     };
 
     const handleAddConsumer = () => {
-        const newCount = watchTotalConsumers + 1;
+        const newCount = Math.min(watchTotalConsumers + 1, 20);
         setValue('totalConsumers', newCount);
     };
 

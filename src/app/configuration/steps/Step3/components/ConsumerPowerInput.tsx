@@ -1,3 +1,4 @@
+// src/app/configuration/steps/Step3/components/ConsumerPowerInput.tsx
 'use client';
 
 import { Controller } from 'react-hook-form';

@@ -1,7 +1,6 @@
 // src/app/configuration/steps/Step3/index.tsx
 'use client';
 
-import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldGroup } from '@/components/ui/field';
@@ -80,27 +79,6 @@ export default function Step3() {
 
     const canSubmit = form.formState.isValid;
 
-    // синхронизация массива
-    useEffect(() => {
-        if (!watchShowIndividualPowers) return;
-
-        const currentLength = fields.length;
-
-        if (watchTotalConsumers > currentLength) {
-            // добавляем недостающих
-            for (let i = currentLength; i < watchTotalConsumers; i++) {
-                append({ power: 0 });
-            }
-        }
-
-        if (watchTotalConsumers < currentLength) {
-            // удаляем лишних
-            for (let i = currentLength - 1; i >= watchTotalConsumers; i--) {
-                remove(i);
-            }
-        }
-    }, [watchShowIndividualPowers, watchTotalConsumers, fields.length, append, remove]);
-
     return (
         <div className="space-y-6">
             <form onSubmit={onSubmit}>
@@ -108,30 +86,21 @@ export default function Step3() {
                     {/* Количество потребителей и общая мощность */}
                     <ConsumersFields
                         control={form.control}
+                        totalConsumers={watchTotalConsumers}
+                        showIndividualPowers={watchShowIndividualPowers}
+                        onToggleIndividualPowers={handleToggleIndividualPowers}
+                        onAddConsumer={handleAddConsumer}
+                        onRemoveConsumer={handleRemoveConsumer}
                         onConsumersChange={handleConsumersChange}
+                        fields={fields}
+                        sumIndividualPowers={sumIndividualPowers}
+                        totalPower={watchTotalPower}
                     />
 
                     <TotalPowerField
                         control={form.control}
                         onTotalPowerChange={handleTotalPowerChange}
                     />
-
-                    {/* Индивидуальные мощности (если потребителей > 1) */}
-                    {watchTotalConsumers > 1 && (
-                        <div className="pt-6 border-t">
-                            <ConsumersFields
-                                control={form.control}
-                                totalConsumers={watchTotalConsumers}
-                                showIndividualPowers={watchShowIndividualPowers}
-                                onToggleIndividualPowers={handleToggleIndividualPowers}
-                                onAddConsumer={handleAddConsumer}
-                                onRemoveConsumer={handleRemoveConsumer}
-                                fields={fields}
-                                sumIndividualPowers={sumIndividualPowers}
-                                totalPower={watchTotalPower}
-                            />
-                        </div>
-                    )}
 
                     {/* Сообщение об ошибке сходимости мощностей */}
                     {watchShowIndividualPowers && watchTotalConsumers > 1 && hasPowerMismatch && (
@@ -173,7 +142,7 @@ export default function Step3() {
             </form>
 
             {/* Сводка всей конфигурации */}
-            <div className="mt-8 p-6 border rounded-lg bg-gray-50">
+            <div className="mt-8 p-6 border rounded-lg bg-gray-50 hidden">
                 <h4 className="font-bold text-lg mb-4">Сводка конфигурации</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Шаг 1 */}
