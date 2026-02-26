@@ -9,6 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, Download, ShoppingCart, RotateCcw, FileText } from 'lucide-react';
 import { useCatalog } from '../../hooks/useCatalog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { downloadSpecificationPDF } from '@/app/configuration/utils/generatePDF';
+import { downloadSpecificationPDF2 } from '@/app/configuration/utils/generatePDF2';
 
 export default function Step5() {
     const { data, goToPrevStep, resetData } = useConfiguration();
@@ -23,6 +25,18 @@ export default function Step5() {
 
     const handleNewConfiguration = () => {
         resetData();
+    };
+
+    // Функция для скачивания спецификации
+    const handleDownloadSpecification = () => {
+        if (kit) {
+            try {
+                downloadSpecificationPDF2(kit, data);
+            } catch (error) {
+                console.error('Ошибка при создании PDF:', error);
+                alert('Произошла ошибка при создании PDF файла');
+            }
+        }
     };
 
     if (!data.calculations) {
@@ -104,7 +118,7 @@ export default function Step5() {
                         Выставить счет
                     </Button>
 
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handleDownloadSpecification} disabled={!kit}>
                         <Download className="h-4 w-4 mr-2" />
                         Спецификация
                     </Button>

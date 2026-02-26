@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 
 export function KitDisplay() {
     const { kit, loading, error, buildKit } = useCatalog();
+    console.log(kit);
 
     if (loading) {
         return (
@@ -143,7 +144,7 @@ export function KitDisplay() {
                                             >
                                                 <div>
                                                     <div className="font-medium">
-                                                        Токосъемник {key}
+                                                        {data.component.name}
                                                     </div>
                                                     <div className="text-sm text-gray-600">
                                                         {data.count} шт × {data.price} ₽
