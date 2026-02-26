@@ -102,11 +102,17 @@ export async function generateSpecificationPDF(
 
     doc.setFont('Roboto');
     doc.setFontSize(20);
-    doc.text('СПЕЦИФИКАЦИЯ КОМПЛЕКТУЮЩИХ', 105, 20, { align: 'center' });
+    doc.text('Спецификация подбора шинопровода', 105, 20, { align: 'center' });
+    doc.text(
+        `и комплектующих под рассчетный ток ${configData.calculations?.totalCurrent} А`,
+        105,
+        27,
+        { align: 'center' },
+    );
 
-    doc.setFontSize(12);
-    doc.text(`Дата: ${new Date().toLocaleDateString('ru-RU')}`, 20, 30);
-    doc.text(`Время: ${new Date().toLocaleTimeString('ru-RU')}`, 20, 37);
+    doc.setFontSize(10);
+    doc.text(`Дата: ${new Date().toLocaleDateString('ru-RU')}`, 20, 36);
+    doc.text(`Время: ${new Date().toLocaleTimeString('ru-RU')}`, 20, 40);
 
     doc.setFontSize(14);
     doc.text('Параметры конфигурации:', 20, 50);
@@ -207,7 +213,7 @@ export async function generateSpecificationPDF(
     // ======================
     // Токосъемники
     // ======================
-
+    // doc.addPage();
     doc.setFontSize(14);
     doc.text('Токосъемники:', 20, yPos);
     yPos += 8;
@@ -258,15 +264,11 @@ export async function generateSpecificationPDF(
         yPos = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    yPos = (doc as any).lastAutoTable.finalY + 10;
+    yPos = (doc as any).lastAutoTable.finalY + 20;
 
     doc.setFontSize(16);
     doc.setTextColor(0, 100, 0);
-    doc.text(
-        `ИТОГО: ${formatPrice(kit.totals.totalPrice)}`,
-        20,
-        doc.internal.pageSize.getHeight() - 30,
-    );
+    doc.text(`ИТОГО: ${formatPrice(kit.totals.totalPrice)}`, 20, yPos, { align: 'left' });
 
     return doc;
 }
