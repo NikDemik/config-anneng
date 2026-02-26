@@ -32,6 +32,33 @@ export interface Series {
     polesAvailable?: number[];
 }
 
+export interface Consumer {
+    power: number;
+}
+
+export interface ConsumerWithCalculation {
+    power: number; // Мощность в кВт
+    current: number; // Ток в А (рассчитанный)
+    requiredCollectors: number; // Необходимое количество токосъемников
+    selectedCollectors: Component[]; // Выбранные токосъемники
+    totalCollectorAmperage: number; // Суммарный ток всех токосъемников
+}
+
+export interface IndividualCollectorSelection {
+    consumers: ConsumerWithCalculation[]; // Массив потребителей с расчетами
+    totalCollectors: number; // Общее количество токосъемников
+    totalPrice: number; // Общая стоимость
+    collectorsByType: Record<
+        string,
+        {
+            // Группировка по типу/номиналу
+            count: number;
+            price: number;
+            component: Component;
+        }
+    >;
+}
+
 export interface ConfigurationResult {
     config: any; // Ваши сохраненные данные
     components: {
@@ -55,32 +82,17 @@ export interface ConfigurationResult {
         totalPrice: number;
         collectorDetails?: {
             // Детали по токосъемникам
+            type?: 'uniform' | 'individual';
             perCollectorAmperage: number;
             collectorsPerConsumer: number;
             totalCollectors: number;
+            consumers?: ConsumerWithCalculation[];
+            collectorsByType?: Record<
+                string,
+                { count: number; price: number; component: Component }
+            >;
         };
     };
-}
-
-// Интерфейс для потребителя с расчетными параметрами
-export interface ConsumerWithCalculation {
-    power: number;           // Мощность в кВт
-    current: number;         // Ток в А (рассчитанный)
-    requiredCollectors: number; // Необходимое количество токосъемников
-    selectedCollectors: Component[]; // Выбранные токосъемники
-    totalCollectorAmperage: number; // Суммарный ток всех токосъемников
-}
-
-// Результат подбора токосъемников для индивидуальных потребителей
-export interface IndividualCollectorSelection {
-    consumers: ConsumerWithCalculation[]; // Массив потребителей с расчетами
-    totalCollectors: number; // Общее количество токосъемников
-    totalPrice: number; // Общая стоимость
-    collectorsByType: Record<string, { // Группировка по типу/номиналу
-        count: number;
-        price: number;
-        component: Component;
-    }>;
 }
 
 class CatalogService {
@@ -119,7 +131,7 @@ class CatalogService {
             .sort((a, b) => a.specs.amperage - b.specs.amperage);
     }
 
-    // ПОДБОР ТОКОСЪЕМНИКОВ ПО КОЛИЧЕСТВУ ПОТРЕБИТЕЛЕЙ И ТОКУ ЛИНИИ
+    // ПОДБОР ТОКОСЪЕМНИКОВ ПО КОЛИЧЕСТВУ ПОТРЕБИТЕЛЕЙ И ТОКУ ЛИНИИ (для одинаковых потребителей)
     selectCurrentCollectors(
         totalLineAmperage: number, // Общий ток линии (например, 140А)
         totalConsumers: number, // Количество потребителей (например, 3)
@@ -170,6 +182,124 @@ class CatalogService {
         };
     }
 
+    /**
+     * ПОДБОР ТОКОСЪЕМНИКОВ ДЛЯ ИНДИВИДУАЛЬНЫХ ПОТРЕБИТЕЛЕЙ
+     * @param consumers - массив потребителей с их мощностями
+     * @param voltage - напряжение линии
+     */
+    selectIndividualCurrentCollectors(
+        consumers: Consumer[],
+        voltage: number,
+    ): IndividualCollectorSelection {
+        // Получаем все доступные токосъемники
+        const allCollectors = this.findCurrentCollectors();
+        if (allCollectors.length === 0) {
+            throw new Error('Токосъемники не найдены в каталоге');
+        }
+
+        // Массив доступных номиналов
+        const availableAmperages = allCollectors.map((c) => c.specs.amperage).sort((a, b) => a - b);
+
+        // Результаты для каждого потребителя
+        const consumersWithCalc: ConsumerWithCalculation[] = [];
+        const collectorsByType: Record<
+            string,
+            { count: number; price: number; component: Component }
+        > = {};
+
+        // Обрабатываем каждого потребителя
+        for (const consumer of consumers) {
+            // Рассчитываем ток для этого потребителя
+            // I = P * 1000 / (U * 1.73 * cosφ * η)
+            const consumerCurrent = (consumer.power * 1000) / (voltage * 1.73 * 0.8 * 0.9);
+
+            // Подбираем токосъемники для этого потребителя
+            const selection = this.selectCollectorsForConsumer(
+                consumerCurrent,
+                availableAmperages,
+                allCollectors,
+            );
+
+            // Добавляем информацию о потребителе
+            consumersWithCalc.push({
+                power: consumer.power,
+                current: consumerCurrent,
+                requiredCollectors: selection.requiredCount,
+                selectedCollectors: selection.collectors,
+                totalCollectorAmperage: selection.totalAmperage,
+            });
+
+            // Группируем токосъемники по номиналу для итоговой статистики
+            selection.collectors.forEach((collector) => {
+                const key = `${collector.specs.amperage}A`;
+                if (!collectorsByType[key]) {
+                    collectorsByType[key] = {
+                        count: 0,
+                        price: collector.price,
+                        component: collector,
+                    };
+                }
+                collectorsByType[key].count++;
+            });
+        }
+
+        // Рассчитываем общую стоимость
+        let totalPrice = 0;
+        Object.values(collectorsByType).forEach((item) => {
+            totalPrice += item.price * item.count;
+        });
+
+        // Общее количество токосъемников
+        const totalCollectors = consumersWithCalc.reduce(
+            (sum, consumer) => sum + consumer.requiredCollectors,
+            0,
+        );
+
+        return {
+            consumers: consumersWithCalc,
+            totalCollectors,
+            totalPrice,
+            collectorsByType,
+        };
+    }
+
+    /**
+     * Подбор токосъемников для одного потребителя
+     */
+    private selectCollectorsForConsumer(
+        requiredCurrent: number,
+        availableAmperages: number[],
+        allCollectors: Component[],
+    ): {
+        collectors: Component[];
+        requiredCount: number;
+        totalAmperage: number;
+    } {
+        // Находим оптимальный номинал
+        const optimalAmperage = this.findOptimalCollectorAmperage(
+            requiredCurrent,
+            availableAmperages,
+        );
+
+        // Находим сам токосъемник
+        const collector = allCollectors.find((c) => c.specs.amperage === optimalAmperage);
+        if (!collector) {
+            throw new Error(`Токосъемник на ${optimalAmperage}А не найден`);
+        }
+
+        // Рассчитываем необходимое количество
+        const requiredCount = Math.ceil(requiredCurrent / optimalAmperage);
+
+        // Создаем массив токосъемников
+        const collectors = Array(requiredCount).fill(collector);
+
+        return {
+            collectors,
+            requiredCount,
+            totalAmperage: optimalAmperage * requiredCount,
+        };
+    }
+
     // Поиск оптимального номинала токосъемника
     private findOptimalCollectorAmperage(
         requiredAmperage: number,
@@ -209,7 +339,6 @@ class CatalogService {
 
         return bestAmperage;
     }
-    
 
     // Поиск комплектующих по серии и совместимости
     findAccessories(seriesId: string, amperage: number, typeIds?: string[]): Component[] {
@@ -263,7 +392,17 @@ class CatalogService {
 
     // Сборка полного комплекта
     async buildKit(configData: any): Promise<ConfigurationResult> {
-        const { length, poles, powerType, totalConsumers, calculations } = configData;
+        const {
+            length,
+            poles,
+            powerType,
+            totalConsumers,
+            totalPower,
+            voltage,
+            showIndividualPowers,
+            individualPowers,
+            calculations,
+        } = configData;
 
         const requiredAmperage = Math.ceil(calculations.totalCurrent);
 
@@ -280,10 +419,76 @@ class CatalogService {
         const { count: sectionCount } = this.calculateSections(length);
 
         // 3. ПОДБОР ТОКОСЪЕМНИКОВ по новой логике
-        const collectorSelection = this.selectCurrentCollectors(requiredAmperage, totalConsumers);
+        // const collectorSelection = this.selectCurrentCollectors(requiredAmperage, totalConsumers);
+        // 3. ПОДБОР ТОКОСЪЕМНИКОВ (с учетом индивидуальных мощностей)
+        let collectorSelection;
+        let collectorDetails;
+
+        if (showIndividualPowers && individualPowers && individualPowers.length > 0) {
+            // Индивидуальный подбор для каждого потребителя
+            collectorSelection = this.selectIndividualCurrentCollectors(individualPowers, voltage);
+            collectorDetails = {
+                type: 'individual',
+                consumers: collectorSelection.consumers,
+                totalCollectors: collectorSelection.totalCollectors,
+                collectorsByType: collectorSelection.collectorsByType,
+            };
+        } else {
+            // Стандартный подбор (все потребители одинаковые)
+            const standardSelection = this.selectCurrentCollectors(
+                requiredAmperage,
+                totalConsumers,
+            );
+
+            // Преобразуем в формат для одного типа потребителей
+            const consumerPower = totalPower / totalConsumers;
+            const consumerCurrent = (consumerPower * 1000) / (voltage * 1.73 * 0.8 * 0.9);
+
+            collectorSelection = {
+                consumers: [
+                    {
+                        power: consumerPower,
+                        current: consumerCurrent,
+                        requiredCollectors: standardSelection.collectorsPerConsumer,
+                        selectedCollectors: standardSelection.collectors.slice(
+                            0,
+                            standardSelection.collectorsPerConsumer,
+                        ),
+                        totalCollectorAmperage:
+                            standardSelection.perCollectorAmperage *
+                            standardSelection.collectorsPerConsumer,
+                    },
+                ],
+                totalCollectors: standardSelection.totalCollectors,
+                totalPrice:
+                    standardSelection.collectors[0].price * standardSelection.totalCollectors,
+                collectorsByType: {
+                    [`${standardSelection.perCollectorAmperage}A`]: {
+                        count: standardSelection.totalCollectors,
+                        price: standardSelection.collectors[0].price,
+                        component: standardSelection.collectors[0],
+                    },
+                },
+            };
+
+            collectorDetails = {
+                type: 'uniform',
+                perCollectorAmperage: standardSelection.perCollectorAmperage,
+                collectorsPerConsumer: standardSelection.collectorsPerConsumer,
+                totalCollectors: standardSelection.totalCollectors,
+            };
+        }
 
         // 4. Находим совместимые комплектующие
         const accessories = this.findAccessories(seriesId, requiredAmperage);
+
+        // Создаем массив токосъемников из результатов подбора
+        const allCollectors: Component[] = [];
+        Object.values(collectorSelection.collectorsByType).forEach((item) => {
+            for (let i = 0; i < item.count; i++) {
+                allCollectors.push(item.component);
+            }
+        });
 
         // Группируем комплектующие по типу
         const grouped = {
@@ -296,10 +501,10 @@ class CatalogService {
             powerfeedLinears: accessories.filter((c) => c.typeId === 'power_feed_linear'),
             fixedSuspensions: accessories.filter((c) => c.typeId === 'suspension_fixed'),
             slidingSuspensions: accessories.filter((c) => c.typeId === 'suspension_sliding'),
-            currentCollectors: collectorSelection.collectors,
             collectorGrips: accessories.filter((c) => c.typeId === 'collector_grip'),
+            currentCollectors: allCollectors,
+            // currentCollectors: collectorSelection.collectors,
         };
-        console.log(grouped);
 
         // Расчет количества крышек концевых
         const endcapCount = powerType === 'end' ? 1 : powerType === 'end2' ? 0 : 2;
@@ -382,11 +587,13 @@ class CatalogService {
                 powerfeedLinears: (grouped.powerfeedLinears[0]?.price || 0) * powerfeedLinearsCount,
                 fixedSuspensions: (grouped.fixedSuspensions[0]?.price || 0) * suspensionFixedCount,
                 slidingSuspensions: (grouped.slidingSuspensions[0]?.price || 0) * suspensionCount,
-                currentCollectors:
-                    (grouped.currentCollectors[0]?.price || 0) * currentCollectorCount,
                 collectorGrips: (grouped.collectorGrips[0]?.price || 0) * collectorGripCount,
+                currentCollectors: collectorSelection.totalPrice,
+                // currentCollectors:
+                //     (grouped.currentCollectors[0]?.price || 0) * currentCollectorCount,
             },
             totalPrice: 0,
+            collectorDetails: collectorDetails,
         };
 
         // Общая стоимость
@@ -406,7 +613,7 @@ class CatalogService {
         return this.data.series.find((s: Series) => s.id === seriesId);
     }
 
-    // Вспомогательная функция для тестирования подбора токосъемников
+    // Вспомогательная функция для тестирования подбора токосъемников (для одинаковых потребителей)
     testCollectorSelection(requiredAmperage: number, consumers: number) {
         const result = this.selectCurrentCollectors(requiredAmperage, consumers);
         console.log(`
@@ -421,7 +628,25 @@ class CatalogService {
         return result;
     }
 
-    
+    // Вспомогательная функция для тестирования подбора токосъемников для индивидуальных потребителей
+    testIndividualCollectorSelection(consumers: Consumer[], voltage: number) {
+        const result = this.selectIndividualCurrentCollectors(consumers, voltage);
+        console.log(`
+        Тест подбора токосъемников (индивидуальные потребители):
+        Напряжение: ${voltage}В
+        Потребители: ${consumers.map((c) => c.power + ' кВт').join(', ')}
+        Результаты по потребителям:
+        ${result.consumers
+            .map(
+                (c, i) =>
+                    `  Потребитель ${i + 1}: ${c.power} кВт → ${Math.round(c.current)}А → ${c.requiredCollectors} шт по ${Math.round(c.totalCollectorAmperage / c.requiredCollectors)}А`,
+            )
+            .join('\n')}
+        Всего токосъемников: ${result.totalCollectors}
+        Общая стоимость: ${result.totalPrice} ₽
+        `);
+        return result;
+    }
 }
 
 export const catalogService = new CatalogService();

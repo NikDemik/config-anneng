@@ -43,6 +43,9 @@ export function KitDisplay() {
         );
     }
 
+    // Список ключей комплектующих, которые нужно исключить из общего списка
+    const excludeFromAccessories = ['currentCollectors'];
+
     return (
         <div className="space-y-6">
             <Card>
@@ -76,39 +79,171 @@ export function KitDisplay() {
                     <div className="mb-6">
                         <h3 className="font-bold mb-3">Комплектующие</h3>
                         <div className="space-y-3">
-                            {Object.entries(kit.totals.accessoriesCount).map(([key, count]) => {
-                                if (count === 0) return null;
+                            {Object.entries(kit.totals.accessoriesCount)
+                                .filter(([key]) => !excludeFromAccessories.includes(key))
+                                .map(([key, count]) => {
+                                    if (count === 0) return null;
 
-                                const component =
-                                    kit.components[key as keyof typeof kit.components]?.[0];
-                                const price =
-                                    kit.totals.accessoriesPrice[
-                                        key as keyof typeof kit.totals.accessoriesPrice
-                                    ];
+                                    const component =
+                                        kit.components[key as keyof typeof kit.components]?.[0];
+                                    const price =
+                                        kit.totals.accessoriesPrice[
+                                            key as keyof typeof kit.totals.accessoriesPrice
+                                        ];
 
-                                if (!component || count === 0) return null;
+                                    if (!component || count === 0) return null;
 
-                                return (
-                                    <div key={key} className="bg-gray-50 p-3 rounded">
-                                        <div className="flex justify-between">
-                                            <div>
-                                                <div className="font-medium">{component.name}</div>
-                                                <div className="text-sm text-gray-600">
-                                                    {count} шт × {component.price} ₽
+                                    return (
+                                        <div key={key} className="bg-gray-50 p-3 rounded">
+                                            <div className="flex justify-between">
+                                                <div>
+                                                    <div className="font-medium">
+                                                        {component.name}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        {count} шт × {component.price} ₽
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-bold">
-                                                    {price.toLocaleString('ru-RU')} ₽
+                                                <div className="text-right">
+                                                    <div className="font-bold">
+                                                        {price.toLocaleString('ru-RU')} ₽
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        всего
+                                                    </div>
                                                 </div>
-                                                <div className="text-sm text-gray-600">всего</div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
                         </div>
                     </div>
+
+                    {/* Токосъемники */}
+                    {kit.components.currentCollectors.length > 0 && (
+                        <div className="mb-4">
+                            <h3 className="font-semibold mb-2">Токосъемники</h3>
+
+                            {/* Если есть индивидуальные потребители */}
+                            {kit.totals.collectorDetails?.type === 'individual' && (
+                                <div className="space-y-3">
+                                    {/* Сводка по типам токосъемников */}
+                                    <div className="bg-gray-50 p-4 rounded">
+                                        {/* <div className="font-medium mb-2">
+                                            Подбор по каждому потребителю:
+                                        </div> */}
+
+                                        {/* Группировка по номиналам */}
+                                        {Object.entries(
+                                            kit.totals.collectorDetails.collectorsByType,
+                                        ).map(([key, data]: [string, any]) => (
+                                            <div
+                                                key={key}
+                                                className="flex justify-between items-center py-2 border-b last:border-0"
+                                            >
+                                                <div>
+                                                    <div className="font-medium">
+                                                        Токосъемник {key}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        {data.count} шт × {data.price} ₽
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold">
+                                                        {(data.price * data.count).toLocaleString(
+                                                            'ru-RU',
+                                                        )}{' '}
+                                                        ₽
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        всего
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Детали по каждому потребителю */}
+                                    <div className="bg-blue-50 p-4 rounded">
+                                        <div className="font-medium mb-2 text-blue-800">
+                                            Распределение по потребителям:
+                                        </div>
+                                        <div className="space-y-2">
+                                            {kit.totals.collectorDetails.consumers.map(
+                                                (consumer: any, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="text-sm bg-white p-2 rounded"
+                                                    >
+                                                        <div className="flex justify-between">
+                                                            <span className="font-medium">
+                                                                Потребитель {index + 1}:
+                                                            </span>
+                                                            <span>
+                                                                {consumer.power} кВт /{' '}
+                                                                {Math.round(consumer.current)} А
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between text-gray-600">
+                                                            <span>Токосъемников:</span>
+                                                            <span>
+                                                                {consumer.requiredCollectors} шт ×{' '}
+                                                                {Math.round(
+                                                                    consumer.totalCollectorAmperage /
+                                                                        consumer.requiredCollectors,
+                                                                )}
+                                                                А
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Если все потребители одинаковые */}
+                            {kit.totals.collectorDetails?.type === 'uniform' && (
+                                <div className="bg-gray-50 p-4 rounded">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-medium">
+                                                {kit.components.currentCollectors[0]?.name}
+                                            </div>
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                {kit.totals.accessoriesCount.currentCollectors} шт ×{' '}
+                                                {kit.components.currentCollectors[0]?.price} ₽
+                                            </div>
+                                            {/* <div className="text-sm text-gray-600 mt-1">
+                                                • Номинал:{' '}
+                                                {kit.totals.collectorDetails.perCollectorAmperage}А
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                                • На потребителя:{' '}
+                                                {kit.totals.collectorDetails.collectorsPerConsumer}{' '}
+                                                шт
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                                • Всего:{' '}
+                                                {kit.totals.accessoriesCount.currentCollectors} шт
+                                            </div> */}
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold">
+                                                {kit.totals.accessoriesPrice.currentCollectors.toLocaleString(
+                                                    'ru-RU',
+                                                )}{' '}
+                                                ₽
+                                            </div>
+                                            <div className="text-sm text-gray-600">всего</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Итого */}
                     <div className="border-t pt-4">
@@ -116,7 +251,7 @@ export function KitDisplay() {
                             <span>ИТОГО:</span>
                             <span>{kit.totals.totalPrice.toLocaleString('ru-RU')} ₽</span>
                         </div>
-                        <div className="flex gap-2 mt-4">
+                        {/* <div className="flex gap-2 mt-4">
                             <Button className="flex-1">
                                 <ShoppingCart className="h-4 w-4 mr-2" />
                                 Добавить в корзину
@@ -125,7 +260,7 @@ export function KitDisplay() {
                                 <Download className="h-4 w-4 mr-2" />
                                 Скачать спецификацию
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 </CardContent>
             </Card>

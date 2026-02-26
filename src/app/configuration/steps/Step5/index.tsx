@@ -6,7 +6,7 @@ import { useConfiguration } from '../../context/ConfigurationContext';
 import { KitDisplay } from '../../components/KitDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Download, ShoppingCart, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, ShoppingCart, RotateCcw, FileText } from 'lucide-react';
 import { useCatalog } from '../../hooks/useCatalog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -100,7 +100,8 @@ export default function Step5() {
                     </Button>
 
                     <Button className="bg-green-600 hover:bg-green-700">
-                        <ShoppingCart className="h-4 w-4 mr-2" />В корзину
+                        <FileText className="h-4 w-4 mr-2" />
+                        Выставить счет
                     </Button>
 
                     <Button variant="outline">
