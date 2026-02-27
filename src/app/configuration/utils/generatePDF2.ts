@@ -101,10 +101,10 @@ export async function generateSpecificationPDF(
     await drawImageWatermark(doc);
 
     doc.setFont('Roboto');
-    doc.setFontSize(20);
+    doc.setFontSize(16);
     doc.text('Спецификация подбора шинопровода', 105, 20, { align: 'center' });
     doc.text(
-        `и комплектующих под рассчетный ток ${configData.calculations?.totalCurrent} А`,
+        `и комплектующих под рассчетный ток ${configData.calculations?.totalCurrent} А, длинной ${configData.length} м`,
         105,
         27,
         { align: 'center' },
@@ -128,7 +128,7 @@ export async function generateSpecificationPDF(
     let yPos = 110;
 
     /* ===============================
-     Секции
+        Секции
   ================================= */
     doc.setFontSize(14);
     doc.text('Секции шинопровода:', 20, yPos);
@@ -163,15 +163,18 @@ export async function generateSpecificationPDF(
     yPos = (doc as any).lastAutoTable.finalY + 10;
 
     /* ===============================
-     Комплектующие
+        Комплектующие
   ================================= */
     doc.setFontSize(14);
     doc.text('Комплектующие:', 20, yPos);
     yPos += 8;
 
+    // Список ключей комплектующих, которые нужно исключить из общего списка
+    const excludeFromAccessories = ['currentCollectors'];
+
     const accessoriesData: any[] = [];
 
-    Object.entries(kit.totals.accessoriesCount).forEach(([key, count]) => {
+    Object.entries(kit.totals.accessoriesCount).filter(([key]) => !excludeFromAccessories.includes(key)).forEach(([key, count]) => {
         if (count === 0) return;
 
         const component = kit.components[key as keyof typeof kit.components]?.[0];
@@ -217,33 +220,47 @@ export async function generateSpecificationPDF(
     doc.setFontSize(14);
     doc.text('Токосъемники:', 20, yPos);
     yPos += 8;
+    
+    const collectorsData: any[] = [];
 
-    const collecotorsData: any[] = [];
+    {/* Если есть индивидуальные потребители */}
+    if (kit.totals.collectorDetails?.type === 'individual') {
+        
+        Object.entries(kit.totals.collectorDetails.collectorsByType).forEach(
+            ([key, data]: [string, any]) => {
+                if (!data || data.count === 0) return;
 
-    Object.entries(kit.totals.collectorDetails.collectorsByType).forEach(
-        ([key, data]: [string, any]) => {
-            if (data === 0) return;
+                if (data.component) {
+                    collectorsData.push([
+                        data.component.name,
+                        data.count.toString(),
+                        formatPrice(data.component.price),
+                        formatPrice(data.component.price * data.count),
+                    ]);
+                }
+            },
+        )
+    } else {
+        const component = kit.components.currentCollectors[0];
+        const price = kit.components.currentCollectors[0]?.price ?? 0;
+        const count = kit.totals.accessoriesCount.currentCollectors;
+    
+        if (component) {
+            collectorsData.push([
+                component.name,
+                count.toString(),
+                formatPrice(component.price),
+                formatPrice(price * count),
+            ]);    
 
-            // const component = kit.components[key as keyof typeof kit.components]?.[0];
-            // const price =
-            //     kit.totals.accessoriesPrice[key as keyof typeof kit.totals.accessoriesPrice];
+        }
+    }
 
-            if (data.component) {
-                collecotorsData.push([
-                    data.component.name,
-                    data.count.toString(),
-                    formatPrice(data.component.price),
-                    formatPrice(data.price * data.count),
-                ]);
-            }
-        },
-    );
-
-    if (collecotorsData.length > 0) {
+    if (collectorsData.length > 0) {
         autoTable(doc, {
             startY: yPos,
             head: [['Наименование', 'Кол-во', 'Цена', 'Сумма']],
-            body: collecotorsData,
+            body: collectorsData,
             styles: {
                 font: 'Roboto', // 🔥 обязательно
                 fontStyle: 'normal',
@@ -274,7 +291,7 @@ export async function generateSpecificationPDF(
 }
 
 /* ===============================
-   Сохранение
+    Сохранение
 ================================= */
 export async function downloadSpecificationPDF2(
     kit: ConfigurationResult,
