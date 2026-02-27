@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useConfiguration } from '../../context/ConfigurationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     CheckCircle,
@@ -23,6 +24,7 @@ import {
     calculateTotalCurrent,
     performCompleteCalculations,
 } from '@/app/configuration/utils/calculations';
+import AddComponents from './fields/AddСomponents';
 
 export default function Step4() {
     const { data, updateCalculations, saveCompleteConfiguration, resetData, goToStep } =
@@ -508,6 +510,8 @@ export default function Step4() {
                         </CardContent>
                     </Card>
 
+                    <AddComponents control={control} />
+
                     {/* Действия */}
                     <Card>
                         <CardHeader>
@@ -516,7 +520,7 @@ export default function Step4() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
-                                <Button
+                                {/* <Button
                                     variant="outline"
                                     className="flex items-center gap-2"
                                     onClick={handleCopyToClipboard}
@@ -547,7 +551,7 @@ export default function Step4() {
                                 >
                                     <Database className="h-4 w-4" />
                                     Просмотр
-                                </Button>
+                                </Button> */}
                             </div>
 
                             <Separator className="my-4" />

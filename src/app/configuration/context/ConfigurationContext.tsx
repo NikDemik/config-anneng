@@ -29,6 +29,11 @@ const initialData: ConfigurationData = {
     showIndividualPowers: false,
     individualPowers: [],
     status: 'draft',
+    addLightSignal: false,
+    addInsulationSection: false,
+    addTape: false,
+    addBrackets: false,
+    brackerType: '400mm-SB',
 };
 
 export function ConfigurationProvider({ children }: { children: ReactNode }) {

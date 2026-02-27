@@ -1,4 +1,5 @@
 export type PowerType = 'end' | 'end2' | 'linear';
+export type brackerType = '400mm' | '400mm-SB' | '600mm' | '600mm-SB' | '800mm' | '800mm-SB';
 
 export interface Consumer {
     power: number;
@@ -35,4 +36,9 @@ export interface ConfigurationData {
     calculations?: CalculationResult;
     savedAt?: string;
     status?: 'draft' | 'calculated' | 'saved' | 'approved';
+    addLightSignal: boolean;
+    addInsulationSection: boolean;
+    addTape: boolean;
+    addBrackets: boolean;
+    brackerType: brackerType;
 }

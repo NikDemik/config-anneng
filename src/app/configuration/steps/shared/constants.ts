@@ -4,6 +4,15 @@ export const POWER_TYPES = {
     LINEAR: 'linear' as const,
 } as const;
 
+export const BRACKET_TYPES = {
+    FOUR_HUNDRED: '400 мм приварной' as const,
+    FOUR_HUNDRED_SB: '400 мм СБ' as const,
+    SIX_HUNDRED: '600 мм приварной' as const,
+    SIX_HUNDRED_SB: '600 мм СБ' as const,
+    EIGHT_HUNDRED: '800 мм приварной' as const,
+    EIGHT_HUNDRED_SB: '800 мм СБ' as const,
+} as const;
+
 export const VALIDATION_MESSAGES = {
     LENGTH_MIN: 'Минимальная длина линии - 1 метр',
     LENGTH_MAX: 'Максимальная длина линии - 1000 метров',

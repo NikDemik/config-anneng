@@ -1,5 +1,10 @@
 import * as z from 'zod';
-import { POWER_TYPES, VALIDATION_MESSAGES, MAX_LENGTH_FOR_END_POWER } from './constants';
+import {
+    POWER_TYPES,
+    BRACKET_TYPES,
+    VALIDATION_MESSAGES,
+    MAX_LENGTH_FOR_END_POWER,
+} from './constants';
 
 // Схема для потребителя
 export const consumerSchema = z.object({
@@ -79,6 +84,23 @@ export const step3Schema = z.object({
     individualPowers: z.array(consumerSchema).optional(),
 });
 
+// Схема для шага 4
+export const step4Schema = z.object({
+    addLightSignal: z.boolean().default(false),
+    addInsulationSection: z.boolean().default(false),
+    addTape: z.boolean().default(false),
+    addBrackets: z.boolean().default(false),
+
+    brackerType: z.enum([
+        BRACKET_TYPES.FOUR_HUNDRED_SB,
+        BRACKET_TYPES.FOUR_HUNDRED,
+        BRACKET_TYPES.SIX_HUNDRED_SB,
+        BRACKET_TYPES.SIX_HUNDRED,
+        BRACKET_TYPES.EIGHT_HUNDRED_SB,
+        BRACKET_TYPES.EIGHT_HUNDRED,
+    ]),
+});
+
 // Полная схема конфигурации с перекрестными валидациями
 export const configurationSchema = z
     .object({
@@ -96,6 +118,13 @@ export const configurationSchema = z
         totalPower: step3Schema.shape.totalPower,
         showIndividualPowers: step3Schema.shape.showIndividualPowers,
         individualPowers: step3Schema.shape.individualPowers,
+
+        // Шаг 4
+        addLightSignal: step4Schema.shape.addLightSignal,
+        addInsulationSection: step4Schema.shape.addInsulationSection,
+        addTape: step4Schema.shape.addTape,
+        addBrackets: step4Schema.shape.addBrackets,
+        brackerType: step4Schema.shape.brackerType,
     })
     .refine(
         (data) => {
