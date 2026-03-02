@@ -7,6 +7,7 @@ import Step2 from './steps/Step2';
 import Step3 from './steps/Step3';
 import Step4 from './steps/Step4';
 import Step5 from './steps/Step5';
+import Step6 from './steps/Step6';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ export default function ConfigurationLayout() {
                 return <Step4 />;
             case 5:
                 return <Step5 />;
+            case 6:
+                return <Step6 />;
             default:
                 return <Step1 />;
         }
@@ -41,9 +44,11 @@ export default function ConfigurationLayout() {
             case 3:
                 return 'Шаг 3: Потребители и мощность';
             case 4:
-                return 'Шаг 4: Проверка и подтверждение';
+                return 'Шаг 4: Дополнительные компоненты';
             case 5:
-                return 'Шаг 5: Подбор комплектующих';
+                return 'Шаг 5: Проверка и подтверждение';
+            case 6:
+                return 'Шаг 6: Подбор комплектующих';
             default:
                 return 'Конфигуратор электрической линии';
         }
@@ -58,8 +63,10 @@ export default function ConfigurationLayout() {
             case 3:
                 return 'Настройте параметры потребителей';
             case 4:
-                return 'Проверьте все введенные данные перед сохранением';
+                return 'Выберите дополнительные компоненты для линии';
             case 5:
+                return 'Проверьте все введенные данные перед сохранением';
+            case 6:
                 return 'На основе ваших данных подобраны оптимальные комплектующие';
             default:
                 return 'Пошаговая конфигурация электрической линии';
@@ -67,32 +74,32 @@ export default function ConfigurationLayout() {
     };
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-            <div className="container mx-auto md:min-w-4xl">
-                {/* Прогресс бар */}
-                <div className="mb-8">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-600">
-                            Шаг {currentStep} из 5
-                        </span>
-                        <span className="text-sm font-medium text-gray-600">
-                            {Math.round((currentStep / 5) * 100)}%
-                        </span>
-                    </div>
-                    <Progress value={(currentStep / 5) * 100} className="h-2" />
+        // <div className="xl:min-h-screen bg-linear-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+        <div className="container mx-auto">
+            {/* Прогресс бар */}
+            <div className="mb-8">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-600">
+                        Шаг {currentStep} из 6
+                    </span>
+                    <span className="text-sm font-medium text-gray-600">
+                        {Math.round((currentStep / 6) * 100)}%
+                    </span>
                 </div>
+                <Progress value={(currentStep / 6) * 100} className="h-2" />
+            </div>
 
-                <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle>{getStepTitle()}</CardTitle>
-                        <CardDescription>{getStepDescription()}</CardDescription>
-                    </CardHeader>
-                    <CardContent>{getStepContent()}</CardContent>
-                </Card>
+            <Card className="w-full">
+                <CardHeader>
+                    <CardTitle>{getStepTitle()}</CardTitle>
+                    <CardDescription>{getStepDescription()}</CardDescription>
+                </CardHeader>
+                <CardContent>{getStepContent()}</CardContent>
+            </Card>
 
-                {/* Навигация */}
-                {/* <Card className="mt-6"> */}
-                {/* <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            {/* Навигация */}
+            {/* <Card className="mt-6"> */}
+            {/* <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div className="flex gap-2">
                             <Button
                                 type="button"
@@ -117,7 +124,7 @@ export default function ConfigurationLayout() {
                                 </Button>
                             )}
 
-                            {currentStep < 4 ? (
+                            {currentStep < 6 ? (
                                 <Button
                                     type="button"
                                     onClick={() => goToStep(currentStep + 1)}
@@ -139,10 +146,10 @@ export default function ConfigurationLayout() {
                         </div>
                     </div> */}
 
-                {/* Быстрая навигация по шагам */}
-                {/* <div className="border-t p-4">
+            {/* Быстрая навигация по шагам */}
+            {/* <div className="border-t p-4">
                         <div className="flex justify-center gap-4">
-                            {[1, 2, 3, 4, 5].map((step) => (
+                            {[1, 2, 3, 4, 5, 6].map((step) => (
                                 <Button
                                     key={step}
                                     type="button"
@@ -159,8 +166,8 @@ export default function ConfigurationLayout() {
                             ))}
                         </div>
                     </div> */}
-                {/* </Card> */}
-            </div>
+            {/* </Card> */}
         </div>
+        // </div>
     );
 }

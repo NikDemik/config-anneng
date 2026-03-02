@@ -5,8 +5,8 @@ import { useConfiguration } from './context/ConfigurationContext';
 import Step1 from './steps/Step1';
 import Step2 from './steps/Step2';
 import Step3 from './steps/Step3';
-import Step4 from './steps/Step4';
-import Step5 from './steps/Step5';
+import Step4 from './steps/Step5';
+import Step5 from './steps/Step6';
 
 export default function ConfigurationSteps() {
     const { currentStep } = useConfiguration();

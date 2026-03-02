@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ConfigurationData, CalculationResult } from '../steps/shared/types';
+import { ConfigurationData, CalculationResult, AdditionalComponents } from '../steps/shared/types';
 
 interface ConfigurationContextType {
     data: ConfigurationData;
@@ -12,10 +12,18 @@ interface ConfigurationContextType {
     goToPrevStep: () => void;
     resetData: () => void;
     updateCalculations: (calculations: CalculationResult) => void;
+    updateAdditionalComponents: (components: Partial<AdditionalComponents>) => void;
     saveCompleteConfiguration: () => void;
 }
 
 const ConfigurationContext = createContext<ConfigurationContextType | undefined>(undefined);
+
+const initialAdditionalComponents: AdditionalComponents = {
+    trafficLight: false,
+    insulationSection: false,
+    rubber: false,
+    brackets: false,
+};
 
 // Начальные данные конфигуратора
 const initialData: ConfigurationData = {
@@ -28,12 +36,9 @@ const initialData: ConfigurationData = {
     totalPower: 20,
     showIndividualPowers: false,
     individualPowers: [],
-    status: 'draft',
-    addLightSignal: false,
-    addInsulationSection: false,
-    addTape: false,
-    addBrackets: false,
+    additionalComponents: initialAdditionalComponents,
     brackerType: '400mm-SB',
+    status: 'draft',
 };
 
 export function ConfigurationProvider({ children }: { children: ReactNode }) {
@@ -50,6 +55,17 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
             ...prev,
             calculations,
             savedAt: new Date().toISOString(),
+        }));
+    };
+
+    // Обновления дополнительных компонентов
+    const updateAdditionalComponents = (components: Partial<AdditionalComponents>) => {
+        setData((prev) => ({
+            ...prev,
+            additionalComponents: {
+                ...prev.additionalComponents,
+                ...components,
+            },
         }));
     };
 
@@ -77,14 +93,14 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
 
     // Управление шагами
     const goToStep = (step: number) => {
-        if (step >= 1 && step <= 5) {
+        if (step >= 1 && step <= 6) {
             setCurrentStep(step);
         }
     };
 
     // Следующий шаг
     const goToNextStep = () => {
-        if (currentStep < 5) {
+        if (currentStep < 6) {
             setCurrentStep((prev) => prev + 1);
         }
     };
@@ -114,6 +130,7 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
                 resetData,
                 updateCalculations,
                 saveCompleteConfiguration,
+                updateAdditionalComponents,
             }}
         >
             {children}

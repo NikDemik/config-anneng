@@ -1,151 +1,716 @@
-// src/app/configuration/steps/Step5/index.tsx
+// src/app/configuration/steps/Step4/index.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useConfiguration } from '../../context/ConfigurationContext';
-import { KitDisplay } from '../../components/KitDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Download, ShoppingCart, RotateCcw, FileText } from 'lucide-react';
-import { useCatalog } from '../../hooks/useCatalog';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { downloadSpecificationPDF2 } from '@/app/configuration/utils/generatePDF2';
+import {
+    CheckCircle,
+    AlertCircle,
+    Download,
+    Printer,
+    Copy,
+    Save,
+    Database,
+    ShoppingCart,
+    Info,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { performCompleteCalculations } from '@/app/configuration/utils/calculations';
 
 export default function Step5() {
-    const { data, goToPrevStep, resetData } = useConfiguration();
-    const { kit, loading, error, buildKit } = useCatalog();
+    const { data, updateCalculations, saveCompleteConfiguration, resetData, goToStep } =
+        useConfiguration();
+    const [isConfirmed, setIsConfirmed] = useState(false);
+    const [calculations, setCalculations] = useState<any>(null);
 
-    // Автоматически запускаем подбор при загрузке шага
+    // Автоматический расчет при загрузке или изменении данных
     useEffect(() => {
-        if (data.calculations) {
-            buildKit();
+        if (data.totalPower > 0 && data.voltage > 0) {
+            const calc = performCompleteCalculations(data);
+            setCalculations(calc);
+            // Сохраняем расчеты в контекст
+            updateCalculations(calc);
         }
-    }, []);
+    }, [data.totalPower, data.voltage, data.totalConsumers, data.length]);
 
-    const handleNewConfiguration = () => {
-        resetData();
-    };
+    // Проверка данных
+    const validationResults = {
+        length: data.length > 0 && data.length <= 1000,
+        poles: data.poles > 0 && data.poles <= 12,
+        voltage: data.voltage >= 24 && data.voltage <= 1000,
+        powerType: ['end', 'end2', 'linear'].includes(data.powerType),
+        totalConsumers: data.totalConsumers > 0 && data.totalConsumers <= 12,
+        totalPower: data.totalPower > 0 && data.totalPower <= 20000,
+        powerMismatch: () => {
+            if (!data.showIndividualPowers || !data.individualPowers) return true;
+            const sum = data.individualPowers.reduce(
+                (total, consumer) => total + consumer.power,
+                0,
+            );
+            return Math.abs(sum - data.totalPower) <= 0.1;
+        },
 
-    // Функция для скачивания спецификации
-    const handleDownloadSpecification = () => {
-        if (kit) {
-            try {
-                downloadSpecificationPDF2(kit, data);
-            } catch (error) {
-                console.error('Ошибка при создании PDF:', error);
-                alert('Произошла ошибка при создании PDF файла');
+        // Проверка типа питания
+        lengthAndPowerType: () => {
+            if (data.length > 150) {
+                // Если длина > 150, проверяем:
+                // 1. Либо выбран LINEAR (рекомендуемый вариант)
+                // 2. Либо включен override и выбран END или END2
+                return data.powerType === 'linear' || data.powerTypeOverride === true;
             }
+            return true;
+        },
+    };
+
+    const allValid =
+        validationResults.length &&
+        validationResults.poles &&
+        validationResults.voltage &&
+        validationResults.powerType &&
+        validationResults.totalConsumers &&
+        validationResults.totalPower &&
+        validationResults.powerMismatch() &&
+        validationResults.lengthAndPowerType();
+
+    const calculated = performCompleteCalculations(data);
+
+    const handleConfirm = () => {
+        // Сохраняем полную конфигурацию
+        const savedConfig = saveCompleteConfiguration();
+        setIsConfirmed(true);
+
+        // Здесь можно добавить отправку данных на сервер
+        console.log('Конфигурация подтверждена:', savedConfig);
+
+        // Можно показать уведомление
+        alert('✅ Конфигурация успешно сохранена!');
+    };
+
+    // Копировать в буфер
+    const handleCopyToClipboard = () => {
+        const configText = `
+            Конфигурация электрической линии:
+            ==============================
+            1. Основные параметры:
+            - Длина линии: ${data.length} м
+            - Количество жил: ${data.poles}
+            
+            2. Параметры питания:
+            - Напряжение: ${data.voltage} В
+            - Тип питания: ${data.powerType === 'end' ? 'Концевое' : 'Линейное'}
+            ${data.length > 150 ? '  (автоматически выбрано линейное питание)' : ''}
+            
+            3. Потребители:
+            - Количество: ${data.totalConsumers} шт
+            - Общая мощность: ${data.totalPower} кВт
+            ${
+                data.showIndividualPowers &&
+                data.individualPowers &&
+                data.individualPowers.length > 0
+                    ? `  - Индивидуальные мощности: ${data.individualPowers.map((p, i) => `П${i + 1}: ${p.power} кВт`).join(', ')}`
+                    : ''
+            }
+                    
+            4. Расчетные параметры:
+            - Общий ток: ${calculated.totalCurrent} А
+            - Коэффициент одновременности: ${calculations?.simultaneityFactor || 'N/A'} (${Math.round((calculations?.simultaneityFactor || 0) * 100)}%)
+            ==============================
+            Дата сохранения: ${new Date().toLocaleString('ru-RU')}
+            `.trim();
+
+        navigator.clipboard.writeText(configText);
+        alert('Конфигурация скопирована в буфер обмена!');
+    };
+
+    // Экспорт в json
+    const handleExportJSON = () => {
+        const jsonData = {
+            config: data,
+            calculated,
+            timestamp: new Date().toISOString(),
+            version: '1.0',
+        };
+
+        const dataStr = JSON.stringify(jsonData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+        const exportFileDefaultName = `конфигурация-линии-${new Date().toISOString().split('T')[0]}.json`;
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    };
+
+    // Печать
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleViewSaved = () => {
+        try {
+            const saved = localStorage.getItem('saved-configurations');
+            const configurations = saved ? JSON.parse(saved) : [];
+            console.log('Сохраненные конфигурации:', configurations);
+            alert(
+                `Найдено ${configurations.length} сохраненных конфигураций. Проверьте консоль для деталей.`,
+            );
+        } catch (error) {
+            console.error('Ошибка чтения сохраненных конфигураций:', error);
         }
     };
 
-    if (!data.calculations) {
+    if (!calculations) {
         return (
             <Card>
                 <CardContent className="pt-6 text-center py-12">
-                    <p className="text-gray-600 mb-4">
-                        Необходимо выполнить расчет на предыдущем шаге
-                    </p>
-                    <Button onClick={() => goToPrevStep()}>Вернуться к расчету</Button>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="space-y-6">
-                <Alert variant="destructive">
-                    <AlertDescription>Ошибка при подборе комплектующих: {error}</AlertDescription>
-                </Alert>
-                <div className="flex justify-between">
-                    <Button variant="outline" onClick={goToPrevStep}>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Назад
-                    </Button>
-                    <Button onClick={resetData}>Изменить данные</Button>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            {/* Информация о конфигурации */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                        <div className="p-3 bg-blue-50 rounded">
-                            <div className="text-blue-600 font-medium">Длина линии</div>
-                            <div className="text-xl font-bold">{data.length} м</div>
-                        </div>
-                        <div className="p-3 bg-green-50 rounded">
-                            <div className="text-green-600 font-medium">Расчетный ток</div>
-                            <div className="text-xl font-bold">
-                                {data.calculations?.totalCurrent} А
-                            </div>
-                        </div>
-                        <div className="p-3 bg-purple-50 rounded">
-                            <div className="text-purple-600 font-medium">Серия шинопровода</div>
-                            <div className="text-xl font-bold">HFP56</div>
-                        </div>
-                        <div className="p-3 bg-amber-50 rounded">
-                            <div className="text-amber-600 font-medium">Количество жил</div>
-                            <div className="text-xl font-bold">{data.poles}</div>
-                        </div>
+                    <div className="animate-pulse">
+                        <p className="text-gray-600">Выполняется расчет параметров...</p>
                     </div>
                 </CardContent>
             </Card>
+        );
+    }
 
-            {/* Отображаем подобранный комплект */}
-            <KitDisplay />
+    // Получение описания типа питания
+    const getPowerTypeDescription = (type: string, length: number, override?: boolean) => {
+        if (length > 150) {
+            if (type === 'linear') {
+                return override
+                    ? 'Линейное питание (принудительно)'
+                    : 'Линейное питание (рекомендуется для линий >150 м)';
+            } else if (type === 'end') {
+                return override
+                    ? 'Концевое питание (принудительный выбор)'
+                    : 'Концевое питание (не рекомендуется для длины >150 м)';
+            } else if (type === 'end2') {
+                return override
+                    ? 'Концевое питание с двух сторон (принудительный выбор)'
+                    : 'Концевое питание с двух сторон (не рекомендуется для длины >150 м)';
+            }
+        } else {
+            if (type === 'end') return 'Концевое питание';
+            if (type === 'end2') return 'Концевое питание с двух сторон';
+            if (type === 'linear') return 'Линейное питание';
+        }
+        return 'Не выбрано';
+    };
 
-            {/* Действия */}
-            <div className="flex justify-between">
-                <Button variant="outline" onClick={goToPrevStep}>
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Назад к проверке
-                </Button>
+    return (
+        <div className="space-y-6">
+            {/* Статус проверки */}
+            <Alert variant={allValid ? 'default' : 'destructive'}>
+                {allValid ? (
+                    <CheckCircle className="h-4 w-4" />
+                ) : (
+                    <AlertCircle className="h-4 w-4" />
+                )}
+                <AlertDescription className="flex justify-between items-center">
+                    <span>
+                        {allValid
+                            ? '✅ Все данные корректны и готовы к сохранению'
+                            : '⚠️ Обнаружены ошибки в конфигурации. Пожалуйста, исправьте их перед сохранением.'}
+                    </span>
+                    {data.calculations && (
+                        <Badge variant="outline" className="ml-2">
+                            <Database className="h-3 w-3 mr-1" />
+                            Расчет выполнен
+                        </Badge>
+                    )}
+                </AlertDescription>
+            </Alert>
 
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleNewConfiguration}>
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        Новая конфигурация
-                    </Button>
+            {/* Детальный обзор конфигурации */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Левая колонка - основные данные */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Обзор конфигурации</CardTitle>
+                        <CardDescription>Проверьте все введенные параметры</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {/* Шаг 1 */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-gray-700">
+                                    Шаг 1: Основные параметры
+                                </h3>
+                                <Button variant="ghost" size="sm" onClick={() => goToStep(1)}>
+                                    Изменить
+                                </Button>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span className="text-gray-600">Длина линии:</span>
+                                        <div className="font-bold">{data.length} м</div>
+                                        <Badge
+                                            variant={
+                                                validationResults.length ? 'default' : 'destructive'
+                                            }
+                                        >
+                                            {validationResults.length ? '✓ Корректно' : 'Ошибка'}
+                                        </Badge>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Количество жил:</span>
+                                        <div className="font-bold">{data.poles} шт</div>
+                                        <Badge
+                                            variant={
+                                                validationResults.poles ? 'default' : 'destructive'
+                                            }
+                                        >
+                                            {validationResults.poles ? '✓ Корректно' : 'Ошибка'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <Button className="bg-green-600 hover:bg-green-700">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Выставить счет
-                    </Button>
+                        {/* Шаг 2 */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-gray-700">
+                                    Шаг 2: Параметры питания
+                                </h3>
+                                <Button variant="ghost" size="sm" onClick={() => goToStep(2)}>
+                                    Изменить
+                                </Button>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span className="text-gray-600">Напряжение:</span>
+                                        <div className="font-bold">{data.voltage} В</div>
+                                        <Badge
+                                            variant={
+                                                validationResults.voltage
+                                                    ? 'default'
+                                                    : 'destructive'
+                                            }
+                                        >
+                                            {validationResults.voltage ? '✓ Корректно' : 'Ошибка'}
+                                        </Badge>
+                                    </div>
 
-                    <Button variant="outline" onClick={handleDownloadSpecification} disabled={!kit}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Спецификация
-                    </Button>
+                                    <div>
+                                        <span className="text-gray-600">Тип питания:</span>
+                                        <div className="font-bold">
+                                            {getPowerTypeDescription(
+                                                data.powerType,
+                                                data.length,
+                                                data.powerTypeOverride,
+                                            )}
+                                        </div>
+
+                                        {/* Логика для Badge */}
+                                        {(() => {
+                                            const isValid = validationResults.lengthAndPowerType();
+                                            const isForcedLinear =
+                                                data.length > 150 &&
+                                                data.powerType === 'linear' &&
+                                                !data.powerTypeOverride;
+                                            const isForcedOverride =
+                                                data.length > 150 &&
+                                                data.powerType !== 'linear' &&
+                                                data.powerTypeOverride;
+
+                                            if (!isValid) {
+                                                return <Badge variant="destructive">Ошибка</Badge>;
+                                            }
+
+                                            if (isForcedOverride) {
+                                                return (
+                                                    <Badge
+                                                        variant="warning"
+                                                        className="bg-amber-100 text-amber-800 border-amber-300"
+                                                    >
+                                                        ⚠️ Принудительный выбор
+                                                    </Badge>
+                                                );
+                                            }
+
+                                            if (isForcedLinear) {
+                                                return (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="bg-blue-50 text-blue-700 border-blue-200"
+                                                    >
+                                                        ℹ️ Автоматически
+                                                    </Badge>
+                                                );
+                                            }
+
+                                            return <Badge variant="default">✓ Корректно</Badge>;
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Информация о принудительном выборе */}
+                                {data.length > 150 &&
+                                    data.powerType !== 'linear' &&
+                                    data.powerTypeOverride && (
+                                        <Alert className="mt-3 bg-amber-50 border-amber-200">
+                                            <Info className="h-4 w-4 text-amber-600" />
+                                            <AlertDescription className="text-amber-800 text-sm">
+                                                Выбрано{' '}
+                                                <strong>
+                                                    {data.powerType === 'end'
+                                                        ? 'концевое'
+                                                        : 'концевое с двух сторон'}
+                                                </strong>{' '}
+                                                питание при длине линии{' '}
+                                                <strong>{data.length} м</strong> (принудительно).
+                                                Убедитесь в корректности расчетов.
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+
+                                {/* Стандартное предупреждение для линейного питания */}
+                                {data.length > 150 &&
+                                    data.powerType === 'linear' &&
+                                    !data.powerTypeOverride && (
+                                        <div className="mt-2 text-sm text-amber-600">
+                                            ⚠️ Автоматически выбрано линейное питание из-за длины
+                                            линии &gt; 150 м
+                                        </div>
+                                    )}
+                            </div>
+                        </div>
+
+                        {/* Шаг 3 */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-gray-700">
+                                    Шаг 3: Потребители и мощность
+                                </h3>
+                                <Button variant="ghost" size="sm" onClick={() => goToStep(3)}>
+                                    Изменить
+                                </Button>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span className="text-gray-600">Потребители:</span>
+                                        <div className="font-bold">{data.totalConsumers} шт</div>
+                                        <Badge
+                                            variant={
+                                                validationResults.totalConsumers
+                                                    ? 'default'
+                                                    : 'destructive'
+                                            }
+                                        >
+                                            {validationResults.totalConsumers
+                                                ? '✓ Корректно'
+                                                : 'Ошибка'}
+                                        </Badge>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Общая мощность:</span>
+                                        <div className="font-bold">{data.totalPower} кВт</div>
+                                        <Badge
+                                            variant={
+                                                validationResults.totalPower
+                                                    ? 'default'
+                                                    : 'destructive'
+                                            }
+                                        >
+                                            {validationResults.totalPower
+                                                ? '✓ Корректно'
+                                                : 'Ошибка'}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                {data.showIndividualPowers &&
+                                    data.individualPowers &&
+                                    data.individualPowers.length > 0 && (
+                                        <div className="mt-3 pt-3 border-t">
+                                            <div className="text-sm font-medium text-gray-700 mb-2">
+                                                Индивидуальные мощности:
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {data.individualPowers.map((consumer, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex justify-between items-center"
+                                                    >
+                                                        <span className="text-sm">
+                                                            Потребитель {index + 1}:
+                                                        </span>
+                                                        <span className="font-bold">
+                                                            {consumer.power} кВт
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="mt-2 flex justify-between text-sm">
+                                                <span>Сумма:</span>
+                                                <span
+                                                    className={`font-bold ${
+                                                        validationResults.powerMismatch()
+                                                            ? 'text-green-600'
+                                                            : 'text-red-600'
+                                                    }`}
+                                                >
+                                                    {data.individualPowers
+                                                        .reduce((sum, c) => sum + c.power, 0)
+                                                        .toFixed(2)}{' '}
+                                                    кВт
+                                                </span>
+                                            </div>
+                                            <Badge
+                                                variant={
+                                                    validationResults.powerMismatch()
+                                                        ? 'default'
+                                                        : 'destructive'
+                                                }
+                                                className="mt-2"
+                                            >
+                                                {validationResults.powerMismatch()
+                                                    ? '✓ Сумма совпадает с общей мощностью'
+                                                    : 'Ошибка: сумма не совпадает'}
+                                            </Badge>
+                                        </div>
+                                    )}
+                            </div>
+                        </div>
+
+                        {/* Шаг 4 - Дополнительные компоненты */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-gray-700">
+                                    Шаг 4: Дополнительные компоненты
+                                </h3>
+                                <Button variant="ghost" size="sm" onClick={() => goToStep(4)}>
+                                    Изменить
+                                </Button>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="col-span-2">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className={`w-2 h-2 rounded-full ${data.additionalComponents?.trafficLight ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                ></div>
+                                                <span className="text-sm">
+                                                    Светофор:{' '}
+                                                    {data.additionalComponents?.trafficLight
+                                                        ? 'Да'
+                                                        : 'Нет'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className={`w-2 h-2 rounded-full ${data.additionalComponents?.insulationSection ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                ></div>
+                                                <span className="text-sm">
+                                                    Секция изоляции:{' '}
+                                                    {data.additionalComponents?.insulationSection
+                                                        ? 'Да'
+                                                        : 'Нет'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className={`w-2 h-2 rounded-full ${data.additionalComponents?.rubber ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                ></div>
+                                                <span className="text-sm">
+                                                    Резина:{' '}
+                                                    {data.additionalComponents?.rubber
+                                                        ? 'Да'
+                                                        : 'Нет'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className={`w-2 h-2 rounded-full ${data.additionalComponents?.brackets ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                ></div>
+                                                <span className="text-sm">
+                                                    Кронштейны:{' '}
+                                                    {data.additionalComponents?.brackets
+                                                        ? 'Да'
+                                                        : 'Нет'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Правая колонка - расчеты и действия */}
+                <div className="space-y-6">
+                    {/* Расчетные параметры */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Расчетные параметры</CardTitle>
+                            <CardDescription>Автоматически рассчитанные значения</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="bg-blue-50 p-3 rounded">
+                                    <div className="text-sm text-blue-600">Общий ток нагрузки</div>
+                                    <div className="text-xl font-bold text-blue-700">
+                                        {calculated.totalCurrent} А
+                                    </div>
+                                    <div className="text-xs text-blue-500 mt-1">
+                                        При напряжении {data.voltage} В
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Действия */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Действия</CardTitle>
+                            <CardDescription>Экспорт и управление конфигурацией</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                    onClick={handleCopyToClipboard}
+                                >
+                                    <Copy className="h-4 w-4" />
+                                    Копировать
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                    onClick={handleExportJSON}
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Экспорт JSON
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                    onClick={handlePrint}
+                                >
+                                    <Printer className="h-4 w-4" />
+                                    Печать
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                    onClick={handleViewSaved}
+                                >
+                                    <Database className="h-4 w-4" />
+                                    Просмотр
+                                </Button> */}
+                            </div>
+
+                            <Separator className="my-4" />
+
+                            <div className="space-y-2">
+                                <Button
+                                    variant="destructive"
+                                    className="w-full"
+                                    onClick={resetData}
+                                >
+                                    Начать заново
+                                </Button>
+
+                                <Button
+                                    className={`w-full ${allValid ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'}`}
+                                    onClick={handleConfirm}
+                                    disabled={!allValid || isConfirmed}
+                                >
+                                    {isConfirmed ? (
+                                        <>
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                            Сохранено
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="h-4 w-4 mr-2" />
+                                            Сохранить конфигурацию
+                                        </>
+                                    )}
+                                </Button>
+
+                                <Button
+                                    className={`w-full ${allValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'}`}
+                                    onClick={() => goToStep(6)}
+                                    disabled={!allValid || !data.calculations}
+                                >
+                                    <ShoppingCart className="h-4 w-4 mr-2" />
+                                    Подобрать комплектующие
+                                </Button>
+
+                                {!allValid && (
+                                    <div className="text-sm text-red-600 text-center">
+                                        Для подтверждения исправьте все ошибки
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
 
-            {/* Пояснение к подбору */}
-            <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="pt-6">
-                    <h4 className="font-bold text-blue-800 mb-2">Как подбирались комплектующие:</h4>
-                    <ul className="space-y-1 text-sm text-blue-700">
-                        <li>
-                            • Секции подобраны по току ({data.calculations?.totalCurrent} А) и
-                            количеству жил ({data.poles})
-                        </li>
-                        <li>
-                            • Количество секций: {Math.ceil(data.length / 4)} шт (длина секции 4 м)
-                        </li>
-                        <li>
-                            • Подвесы устанавливаются по 3 шт на секцию:{' '}
-                            {Math.ceil(data.length / 2) * 2} шт
-                        </li>
-                        <li>
-                            • Токосъемники: с запасом по номиналу на каждого потребителя (
-                            {data.totalConsumers} шт)
-                        </li>
-                        <li>• Все комплектующие совместимы с серией HFP56 и выбранным током</li>
-                    </ul>
+            {/* Сводная информация */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Итоговая информация</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                        <div className="p-4 bg-gray-50 rounded">
+                            <div className="text-2xl font-bold text-blue-600">{data.length} м</div>
+                            <div className="text-sm text-gray-600">Длина линии</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded">
+                            <div className="text-2xl font-bold text-green-600">
+                                {data.totalPower} кВт
+                            </div>
+                            <div className="text-sm text-gray-600">Общая мощность</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded">
+                            <div className="text-2xl font-bold text-amber-600">
+                                {calculated.totalCurrent} А
+                            </div>
+                            <div className="text-sm text-gray-600">Ток нагрузки</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded">
+                            <div className="text-2xl font-bold text-purple-600">
+                                {data.totalConsumers}
+                            </div>
+                            <div className="text-sm text-gray-600">Потребителей</div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-blue-50 rounded border border-blue-200">
+                        <h4 className="font-bold text-blue-700 mb-2">Рекомендации:</h4>
+                        <ul className="space-y-1 text-sm text-blue-600">
+                            <li>
+                                • Проверьте соответствие выбранного типа питания (
+                                {data.powerType === 'end' ? 'концевого' : 'линейного'}) требованиям
+                                проекта
+                            </li>
+                            {data.showIndividualPowers && (
+                                <li>• Распределите нагрузку равномерно между фазами</li>
+                            )}
+                        </ul>
+                    </div>
+
+                    {data.calculations && (
+                        <div className="mt-4 text-sm text-gray-500 text-right">
+                            Расчет выполнен: {new Date(data.savedAt || '').toLocaleString('ru-RU')}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

@@ -8,6 +8,13 @@ export interface Consumer {
     type?: string;
 }
 
+export interface AdditionalComponents {
+    trafficLight: boolean; // Светофор
+    insulationSection: boolean; // Секция изоляции
+    rubber: boolean; // Резина
+    brackets: boolean; // Кронштейны
+}
+
 // Добавляем расчетные параметры
 export interface CalculationResult {
     totalCurrent: number;
@@ -32,13 +39,12 @@ export interface ConfigurationData {
     showIndividualPowers: boolean;
     individualPowers: Consumer[];
 
-    // Шаг 4 - расчетные параметры
+    // Шаг 4 - доп компоненты
+    additionalComponents: AdditionalComponents;
+    brackerType: brackerType;
+
+    // Шаг 5 - расчетные параметры
     calculations?: CalculationResult;
     savedAt?: string;
     status?: 'draft' | 'calculated' | 'saved' | 'approved';
-    addLightSignal: boolean;
-    addInsulationSection: boolean;
-    addTape: boolean;
-    addBrackets: boolean;
-    brackerType: brackerType;
 }

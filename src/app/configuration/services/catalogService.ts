@@ -542,11 +542,7 @@ class CatalogService {
 
         // Расчет количества фиксирующих подвесов
         function calculateSuspensionCount(length: number): number {
-            return powerType === 'linear'
-                ? (length <= 150 ? 2 : Math.floor(length / 75)) + powerfeedLinearsCount * 2
-                : length <= 75
-                  ? 1
-                  : Math.floor(length / 75) + 1;
+            return Math.ceil(length / 150) + (powerType === 'linear' ? powerfeedLinearsCount : 0);
         }
         const suspensionFixedCount = calculateSuspensionCount(length);
 

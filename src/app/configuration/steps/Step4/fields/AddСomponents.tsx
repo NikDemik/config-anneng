@@ -20,30 +20,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AddComponentsProps {
     control: Control<ConfigurationData>;
-    onToggleIndividualPowers?: (checked: boolean) => void;
     showAddComponents?: boolean;
-
-    totalConsumers?: number;
-    onConsumersChange?: (value: number) => void;
-    onAddConsumer?: () => void;
-    onRemoveConsumer?: (index: number) => void;
-    fields?: any[];
-    sumIndividualPowers?: number;
-    totalPower?: number;
+    onToggleAddLightSignal?: (checked: boolean) => void;
+    onToggleAddInsulationSection?: (checked: boolean) => void;
+    onToggleAddTape?: (checked: boolean) => void;
+    onToggleAddBrackets?: (checked: boolean) => void;
 }
 
-export default function AddComponents({
-    control,
-    totalConsumers = 1,
-    showAddComponents = false,
-    onConsumersChange,
-    onToggleIndividualPowers,
-    onAddConsumer,
-    onRemoveConsumer,
-    fields = [],
-    sumIndividualPowers = 0,
-    totalPower = 0,
-}: AddComponentsProps) {
+export default function AddComponents({ control }: AddComponentsProps) {
     <Card>
         <CardHeader>
             <CardTitle className="text-lg">Дополнительные компонетнты</CardTitle>
@@ -51,20 +35,50 @@ export default function AddComponents({
         </CardHeader>
         <CardContent className="space-y-3">
             <Controller
-                name="addComponents"
+                name="addLightSignal"
                 control={control}
-                render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid} orientation="horizontal">
-                        <Checkbox id="terms-checkbox-2" name="terms-checkbox-2" defaultChecked />
-                        <FieldContent>
-                            <FieldLabel htmlFor="terms-checkbox-2">
-                                Accept terms and conditions
-                            </FieldLabel>
-                            <FieldDescription>
-                                By clicking this checkbox, you agree to the terms.
-                            </FieldDescription>
-                        </FieldContent>
-                    </Field>
+                render={({ field }) => (
+                    <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Добавить световую сигнализацию"
+                    />
+                )}
+            />
+
+            <Controller
+                name="addInsulationSection"
+                control={control}
+                render={({ field }) => (
+                    <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Добавить секцию изоляции"
+                    />
+                )}
+            />
+
+            <Controller
+                name="addTape"
+                control={control}
+                render={({ field }) => (
+                    <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Добавить ленту"
+                    />
+                )}
+            />
+
+            <Controller
+                name="addBrackets"
+                control={control}
+                render={({ field }) => (
+                    <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Добавить кронштейны"
+                    />
                 )}
             />
         </CardContent>
