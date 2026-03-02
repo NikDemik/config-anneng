@@ -7,7 +7,7 @@ export default function ConfigurationLayout({ children }: { children: React.Reac
     return (
         <ConfigurationProvider>
             <div className="flex min-h-screen items-center justify-center bg-zinc-800 font-sans dark:bg-black">
-                <main className="flex xl:min-h-screen w-full max-w-8xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start rounded-4xl">
+                <main className="flex xl:min-h-screen w-full max-w-8xl flex-col items-center justify-between bg-bg-page dark:bg-black sm:items-start rounded-4xl overflow-hidden">
                     {children}
                 </main>
             </div>
