@@ -1,6 +1,7 @@
 // src/app/configuration/layout.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useConfiguration } from './context/ConfigurationContext';
 import Step1 from './steps/Step1';
 import Step2 from './steps/Step2';
@@ -11,62 +12,187 @@ import Step6 from './steps/Step6';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Home, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, CheckCircle, Lock } from 'lucide-react';
 
 const steps = [
     {
         id: 1,
         title: 'Основные параметры линии',
         description: 'Укажите длину линии и количество жил',
+        component: Step1,
     },
     {
         id: 2,
         title: 'Параметры питания',
         description: 'Настройте напряжение и тип питания',
+        component: Step2,
     },
     {
         id: 3,
         title: 'Потребители и мощность',
         description: 'Настройте параметры потребителей',
+        component: Step3,
     },
     {
         id: 4,
         title: 'Дополнительные компоненты',
         description: 'Выберите дополнительные компоненты для линии',
+        component: Step4,
     },
     {
         id: 5,
         title: 'Проверка и подтверждение',
         description: 'Проверьте все введенные данные перед сохранением',
+        component: Step5,
     },
     {
         id: 6,
         title: 'Подбор комплектующих',
         description: 'На основе ваших данных подобраны оптимальные комплектующие',
+        component: Step6,
     },
 ];
 
 export default function ConfigurationLayout() {
     const { currentStep, goToStep } = useConfiguration();
 
-    const getStepContent = () => {
-        switch (currentStep) {
-            case 1:
-                return <Step1 />;
-            case 2:
-                return <Step2 />;
-            case 3:
-                return <Step3 />;
-            case 4:
-                return <Step4 />;
-            case 5:
-                return <Step5 />;
-            case 6:
-                return <Step6 />;
-            default:
-                return <Step1 />;
+    const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]));
+    const [maxReachedStep, setMaxReachedStep] = useState(1);
+
+    // Отслеживаем посещение шагов
+    useEffect(() => {
+        setVisitedSteps((prev) => new Set(prev).add(currentStep));
+        setMaxReachedStep((prev) =>
+            currentStep > prev ? currentStep : prev
+        );
+    }, [currentStep]);
+
+    const currentStepData = steps.find((s) => s.id === currentStep);
+    const CurrentComponent = currentStepData?.component;
+
+    const handleStepClick = (stepId: number) => {
+        // Разрешаем переход только если шаг уже посещался
+        if (visitedSteps.has(stepId)) {
+            goToStep(stepId);
         }
     };
+
+    const progress = (maxReachedStep / steps.length) * 100;
+
+    return (
+        <div className="container mx-auto flex">
+            {/* Sidebar */}
+            <div className="min-w-[300px] min-h-screen border border-border-default p-6 bg-card">
+                <div className="mb-6">
+                    <p className="text-[1.125rem] text-text-primary font-semibold">
+                        Конфигуратор
+                    </p>
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-2">
+                        {Math.round(progress)}%
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                    {steps.map((step) => {
+                        const isActive = currentStep === step.id;
+                        const isCompleted = step.id < maxReachedStep;
+                        const isVisited = visitedSteps.has(step.id);
+                        const isLocked = !isVisited;
+
+                        return (
+                            <div
+                                key={step.id}
+                                className="flex items-center gap-3"
+                            >
+                                <Button
+                                    type="button"
+                                    disabled={isLocked}
+                                    variant={isActive ? 'default' : 'ghost'}
+                                    onClick={() =>
+                                        handleStepClick(step.id)
+                                    }
+                                    className={`relative w-10 h-10 rounded-full p-0
+                                        ${
+                                            isCompleted
+                                                ? 'bg-green-600 text-white'
+                                                : ''
+                                        }
+                                        ${
+                                            isActive
+                                                ? 'bg-blue-600 text-white'
+                                                : ''
+                                        }
+                                    `}
+                                >
+                                    {isCompleted ? (
+                                        <CheckCircle className="h-4 w-4" />
+                                    ) : (
+                                        step.id
+                                    )}
+                                </Button>
+
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium">
+                                        Шаг {step.id}
+                                    </p>
+                                    <p
+                                        className={`text-xs ${
+                                            isLocked
+                                                ? 'text-muted-foreground opacity-50'
+                                                : 'text-muted-foreground'
+                                        }`}
+                                    >
+                                        {step.title}
+                                    </p>
+                                </div>
+
+                                {isLocked && (
+                                    <Lock className="h-4 w-4 text-muted-foreground opacity-50" />
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Main content */}
+            <Card className="flex-1 shadow-sm rounded-2xl">
+                <CardHeader>
+                    <CardTitle>
+                        Шаг {currentStep}: {currentStepData?.title}
+                    </CardTitle>
+                    <CardDescription>
+                        {currentStepData?.description}
+                    </CardDescription>
+                </CardHeader>
+
+                <CardContent>
+                    {CurrentComponent && <CurrentComponent />}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+    // const getStepContent = () => {
+    //     switch (currentStep) {
+    //         case 1:
+    //             return <Step1 />;
+    //         case 2:
+    //             return <Step2 />;
+    //         case 3:
+    //             return <Step3 />;
+    //         case 4:
+    //             return <Step4 />;
+    //         case 5:
+    //             return <Step5 />;
+    //         case 6:
+    //             return <Step6 />;
+    //         default:
+    //             return <Step1 />;
+    //     }
+    // };
 
     // const getStepTitle = () => {
     //     switch (currentStep) {
@@ -106,34 +232,34 @@ export default function ConfigurationLayout() {
     //     }
     // };
 
-    return (
-        <div className="container flex mx-auto">
-            {/* Быстрая навигация по шагам */}
-            <div className="min-w-[280px] min-h-screen p-6 border border-border-default bg-bg-card">
-                <div className="flex flex-col justify-center gap-4">
-                    {steps.map((step) => (
-                        <div key={step.id} className="flex justify-between gap-3 items-center">
-                            <Button
-                                type="button"
-                                variant={currentStep === step.id ? 'default' : 'ghost'}
-                                onClick={() => goToStep(step.id)}
-                                className={`rounded-full w-10 h-10 p-0 ${
-                                    currentStep === step.id
-                                        ? 'bg-blue-600 text-white'
-                                        : 'text-gray-600 hover:text-blue-600'
-                                }`}
-                            >
-                                {step.id}
-                            </Button>
+    // return (
+    //     <div className="container flex mx-auto">
+    //         {/* Быстрая навигация по шагам */}
+    //         <div className="min-w-[280px] min-h-screen p-6 border border-border-default bg-bg-card">
+    //             <div className="flex flex-col justify-center gap-4">
+    //                 {steps.map((step) => (
+    //                     <div key={step.id} className="flex gap-3 items-center">
+    //                         <Button
+    //                             type="button"
+    //                             variant={currentStep === step.id ? 'default' : 'ghost'}
+    //                             onClick={() => goToStep(step.id)}
+    //                             className={`rounded-full w-10 h-10 p-0 ${
+    //                                 currentStep === step.id
+    //                                     ? 'bg-blue-600 text-white'
+    //                                     : 'text-gray-600 hover:text-blue-600'
+    //                             }`}
+    //                         >
+    //                             {step.id}
+    //                         </Button>
 
-                            <div>
-                                <h2 className="font-medium">Шаг {step.id}</h2>
-                                <p className="text-sm text-muted-foreground">{step.title}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+    //                         <div>
+    //                             <h2 className="font-medium">Шаг {step.id}</h2>
+    //                             <p className="text-sm text-muted-foreground">{step.title}</p>
+    //                         </div>
+    //                     </div>
+    //                 ))}
+    //             </div>
+    //         </div>
 
             {/* Прогресс бар */}
             {/* <div className=" min-w-[280px] min-h-screen p-6 border border-border-default bg-bg-card">
@@ -148,15 +274,15 @@ export default function ConfigurationLayout() {
                 <Progress value={(currentStep / 6) * 100} className="h-2" />
             </div> */}
 
-            <Card className="w-full">
-                <CardHeader>
-                    <CardTitle>
-                        Шаг {currentStep}: {steps[currentStep - 1].title}
-                    </CardTitle>
-                    <CardDescription>{steps[currentStep - 1].description}</CardDescription>
-                </CardHeader>
-                <CardContent>{getStepContent()}</CardContent>
-            </Card>
+            // <Card className="w-full">
+            //     <CardHeader>
+            //         <CardTitle>
+            //             Шаг {currentStep}: {steps[currentStep - 1].title}
+            //         </CardTitle>
+            //         <CardDescription>{steps[currentStep - 1].description}</CardDescription>
+            //     </CardHeader>
+            //     <CardContent>{getStepContent()}</CardContent>
+            // </Card>
 
             {/* Навигация */}
             {/* <Card className="mt-6">
@@ -208,6 +334,6 @@ export default function ConfigurationLayout() {
                     </div>
                 </div>
             </Card> */}
-        </div>
-    );
-}
+//         </div>
+//     );
+// }
